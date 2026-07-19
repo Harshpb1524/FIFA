@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered stadium operations platform for FIFA World Cup 2026. Real-time crowd intelligence, smart navigation, transportation planning, and sustainability tracking — all driven by generative AI.">
+  <title>StadiumAI — FIFA World Cup 2026 Intelligence Platform</title>
+
+  <!-- Favicon: Soccer Ball Emoji via SVG Data URI -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <noscript>
+    <style>
+      #splash-screen { display: none !important; }
+      #app { display: block !important; }
+      .noscript-banner { background: #7b1537; color: #fff; text-align: center; padding: 1.5rem; font-family: 'Inter', sans-serif; font-size: 1rem; }
+    </style>
+  </noscript>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       NOSCRIPT FALLBACK
+  ════════════════════════════════════════════ -->
+  <noscript>
+    <div class="noscript-banner" role="alert">
+      <strong>JavaScript Required:</strong> StadiumAI requires JavaScript to function. Please enable JavaScript in your browser settings to use this platform.
+    </div>
+  </noscript>
+
+  <!-- ═══════════════════════════════════════════
+       SPLASH / LOADING SCREEN
+  ════════════════════════════════════════════ -->
+  <div id="splash-screen" class="splash-screen" role="status" aria-label="Loading application">
+    <div class="splash-content">
+      <div class="splash-logo" aria-hidden="true">
+        <div class="splash-emblem">
+          <span class="splash-icon">⚽</span>
+          <div class="splash-rings">
+            <span class="ring ring-1"></span>
+            <span class="ring ring-2"></span>
+            <span class="ring ring-3"></span>
+          </div>
+        </div>
+        <h1 class="splash-title">
+          <span class="splash-title-primary">StadiumAI</span>
+          <span class="splash-title-divider"></span>
+          <span class="splash-title-secondary">FIFA World Cup 2026™</span>
+        </h1>
+      </div>
+      <div class="splash-loader">
+        <div class="splash-loader-track">
+          <div class="splash-loader-bar" id="splash-loader-bar"></div>
+        </div>
+        <p class="splash-loader-text" id="splash-loader-text">Initializing AI Systems…</p>
+      </div>
+      <p class="splash-tagline">Powering the Beautiful Game with AI</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       APPLICATION SHELL
+  ════════════════════════════════════════════ -->
+  <div id="app" class="app-shell">
+
+    <!-- ─── SIDEBAR NAVIGATION ─── -->
+    <aside id="sidebar" class="sidebar" role="navigation" aria-label="Main navigation">
+      <div class="sidebar-inner">
+
+        <!-- Logo Area -->
+        <div class="sidebar-logo">
+          <div class="logo-icon" aria-hidden="true">
+            <i class="fa-solid fa-futbol"></i>
+          </div>
+          <div class="logo-text">
+            <span class="logo-name">StadiumAI</span>
+            <span class="logo-subtitle">FIFA WC 2026</span>
+          </div>
+        </div>
+
+        <!-- Navigation Items -->
+        <nav class="sidebar-nav" aria-label="Primary">
+          <ul class="nav-list" role="list">
+            <li>
+              <button class="nav-item active" data-tab="home" id="nav-home" aria-current="page" aria-label="Home">
+                <i class="fa-solid fa-home nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Home</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="assistant" id="nav-assistant" aria-label="AI Assistant">
+                <i class="fa-solid fa-robot nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">AI Assistant</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="navigator" id="nav-navigator" aria-label="Navigator">
+                <i class="fa-solid fa-map-location-dot nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Navigator</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="crowd" id="nav-crowd" aria-label="Crowd Intel">
+                <i class="fa-solid fa-people-group nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Crowd Intel</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="transport" id="nav-transport" aria-label="Transport">
+                <i class="fa-solid fa-bus nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Transport</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="sustainability" id="nav-sustainability" aria-label="Sustainability">
+                <i class="fa-solid fa-leaf nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Sustainability</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-tab="operations" id="nav-operations" aria-label="Operations">
+                <i class="fa-solid fa-gear nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">Operations</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Sidebar Bottom -->
+        <div class="sidebar-bottom">
+          <button class="nav-item nav-item--settings" id="open-settings" aria-label="Open settings">
+            <i class="fa-solid fa-sliders nav-icon" aria-hidden="true"></i>
+            <span class="nav-label">Settings</span>
+          </button>
+          <div class="sidebar-meta">
+            <span class="api-key-indicator" id="api-key-indicator" title="API Key not configured" aria-label="API key status: not configured">
+              <span class="indicator-dot indicator-dot--inactive"></span>
+              <span class="indicator-text">API Key</span>
+            </span>
+            <span class="version-tag">v2.0</span>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ─── MAIN CONTENT AREA ─── -->
+    <main id="main-content" class="main-content" role="main">
+
+      <!-- Top Bar -->
+      <header id="top-bar" class="top-bar">
+        <div class="top-bar-left">
+          <button id="menu-toggle" class="menu-toggle" aria-label="Toggle sidebar menu" aria-expanded="false" aria-controls="sidebar">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+          <h2 id="page-title" class="page-title">Home</h2>
+        </div>
+        <div class="top-bar-right">
+          <!-- Language Selector -->
+          <div class="top-bar-item">
+            <label for="lang-selector" class="sr-only">Select language</label>
+            <select id="lang-selector" class="lang-selector" aria-label="Language">
+              <option value="en" selected>English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="ar">Arabic</option>
+              <option value="pt">Portuguese</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="de">German</option>
+              <option value="zh">Mandarin</option>
+            </select>
+          </div>
+          <!-- Notification Bell -->
+          <button id="notification-bell" class="top-bar-icon-btn" aria-label="Notifications — 3 unread" data-count="3">
+            <i class="fa-solid fa-bell" aria-hidden="true"></i>
+            <span class="badge" aria-hidden="true">3</span>
+          </button>
+          <!-- User Avatar -->
+          <button id="user-avatar" class="user-avatar" aria-label="User profile">
+            <span aria-hidden="true">G</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Container -->
+      <div id="content-container" class="content-container">
+
+        <!-- ══════════════════════════════════════
+             TAB 1: HOME
+        ══════════════════════════════════════ -->
+        <section id="tab-home" class="tab-panel active" role="tabpanel" aria-labelledby="nav-home">
+
+          <!-- Welcome Banner -->
+          <div class="welcome-banner" data-animate="fade-up">
+            <div class="welcome-banner-content">
+              <h1 class="welcome-title">Welcome to <span class="text-gradient">StadiumAI</span></h1>
+              <p class="welcome-subtitle">Your AI-powered companion for FIFA World Cup 2026™</p>
+              <div class="welcome-actions">
+                <button class="btn btn-primary btn-glow" id="cta-ai-assistant" data-navigate="assistant" aria-label="Talk to AI Assistant">
+                  <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                  Talk to AI Assistant
+                </button>
+                <button class="btn btn-secondary" id="cta-explore-map" data-navigate="navigator" aria-label="Explore Stadium Map">
+                  <i class="fa-solid fa-map" aria-hidden="true"></i>
+                  Explore Stadium Map
+                </button>
+              </div>
+            </div>
+            <div class="welcome-banner-art" aria-hidden="true">
+              <div class="floating-icon fi-1">⚽</div>
+              <div class="floating-icon fi-2">🏟️</div>
+              <div class="floating-icon fi-3">🤖</div>
+              <div class="floating-icon fi-4">🌍</div>
+            </div>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="stats-grid" data-animate="stagger">
+            <div class="stat-card" data-stat="venues">
+              <div class="stat-icon"><i class="fa-solid fa-building-columns" aria-hidden="true"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-venues">16</span>
+                <span class="stat-label">Active Venues</span>
+              </div>
+            </div>
+            <div class="stat-card" data-stat="matches">
+              <div class="stat-icon"><i class="fa-solid fa-futbol" aria-hidden="true"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-matches">4</span>
+                <span class="stat-label">Today's Matches</span>
+              </div>
+            </div>
+            <div class="stat-card" data-stat="capacity">
+              <div class="stat-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-capacity">1.2M</span>
+                <span class="stat-label">Fan Capacity</span>
+              </div>
+            </div>
+            <div class="stat-card" data-stat="queries">
+              <div class="stat-icon"><i class="fa-solid fa-brain" aria-hidden="true"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-queries">45.2K</span>
+                <span class="stat-label">AI Queries Today</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <h3 class="section-title">Quick Actions</h3>
+          <div class="quick-actions-grid" data-animate="stagger">
+            <button class="action-card" id="action-find-seat" data-action="find-seat" aria-label="Find My Seat">
+              <div class="action-icon"><i class="fa-solid fa-route" aria-hidden="true"></i></div>
+              <h4 class="action-title">Find My Seat</h4>
+              <p class="action-desc">AI-powered navigation to your seat</p>
+            </button>
+            <button class="action-card" id="action-food" data-action="food" aria-label="Food and Drinks">
+              <div class="action-icon"><i class="fa-solid fa-utensils" aria-hidden="true"></i></div>
+              <h4 class="action-title">Food &amp; Drinks</h4>
+              <p class="action-desc">Nearby concessions with wait times</p>
+            </button>
+            <button class="action-card" id="action-accessibility" data-action="accessibility" aria-label="Accessibility">
+              <div class="action-icon"><i class="fa-solid fa-wheelchair" aria-hidden="true"></i></div>
+              <h4 class="action-title">Accessibility</h4>
+              <p class="action-desc">Inclusive navigation assistance</p>
+            </button>
+            <button class="action-card" id="action-parking" data-action="parking" aria-label="Parking and Transit">
+              <div class="action-icon"><i class="fa-solid fa-car" aria-hidden="true"></i></div>
+              <h4 class="action-title">Parking &amp; Transit</h4>
+              <p class="action-desc">Smart transportation planning</p>
+            </button>
+            <button class="action-card" id="action-safety" data-action="safety" aria-label="Safety Info">
+              <div class="action-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+              <h4 class="action-title">Safety Info</h4>
+              <p class="action-desc">Emergency exits &amp; first aid</p>
+            </button>
+            <button class="action-card" id="action-translate" data-action="translate" aria-label="Translate">
+              <div class="action-icon"><i class="fa-solid fa-language" aria-hidden="true"></i></div>
+              <h4 class="action-title">Translate</h4>
+              <p class="action-desc">Real-time multilingual support</p>
+            </button>
+          </div>
+
+          <!-- Live Matches -->
+          <div class="live-matches" data-animate="fade-up">
+            <h3 class="section-title">Live &amp; Upcoming Matches</h3>
+            <div id="matches-container" class="matches-container">
+
+              <!-- Match Card 1 — LIVE -->
+              <article class="match-card match-card--live" data-match-id="m1" aria-label="Live match: Brazil versus Germany">
+                <span class="match-status-badge badge-live"><i class="fa-solid fa-circle fa-beat-fade" aria-hidden="true"></i> LIVE</span>
+                <div class="match-body">
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇧🇷</span>
+                    <span class="team-name">Brazil</span>
+                  </div>
+                  <div class="match-score-block">
+                    <span class="match-score">2 – 1</span>
+                    <span class="match-time">67'</span>
+                  </div>
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇩🇪</span>
+                    <span class="team-name">Germany</span>
+                  </div>
+                </div>
+                <div class="match-venue"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> MetLife Stadium, New Jersey</div>
+              </article>
+
+              <!-- Match Card 2 — LIVE -->
+              <article class="match-card match-card--live" data-match-id="m2" aria-label="Live match: Argentina versus France">
+                <span class="match-status-badge badge-live"><i class="fa-solid fa-circle fa-beat-fade" aria-hidden="true"></i> LIVE</span>
+                <div class="match-body">
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇦🇷</span>
+                    <span class="team-name">Argentina</span>
+                  </div>
+                  <div class="match-score-block">
+                    <span class="match-score">1 – 1</span>
+                    <span class="match-time">42'</span>
+                  </div>
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇫🇷</span>
+                    <span class="team-name">France</span>
+                  </div>
+                </div>
+                <div class="match-venue"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> SoFi Stadium, Los Angeles</div>
+              </article>
+
+              <!-- Match Card 3 — UPCOMING -->
+              <article class="match-card match-card--upcoming" data-match-id="m3" aria-label="Upcoming match: Mexico versus Japan">
+                <span class="match-status-badge badge-upcoming"><i class="fa-regular fa-clock" aria-hidden="true"></i> UPCOMING</span>
+                <div class="match-body">
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇲🇽</span>
+                    <span class="team-name">Mexico</span>
+                  </div>
+                  <div class="match-score-block">
+                    <span class="match-time-upcoming">19:00 ET</span>
+                  </div>
+                  <div class="match-team">
+                    <span class="team-flag" aria-hidden="true">🇯🇵</span>
+                    <span class="team-name">Japan</span>
+                  </div>
+                </div>
+                <div class="match-venue"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Estadio Azteca, Mexico City</div>
+              </article>
+
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 2: AI ASSISTANT
+        ══════════════════════════════════════ -->
+        <section id="tab-assistant" class="tab-panel" role="tabpanel" aria-labelledby="nav-assistant">
+
+          <!-- API Key Setup Panel -->
+          <div id="api-key-panel" class="api-key-panel" data-state="visible">
+            <div class="card card--centered api-key-card">
+              <div class="api-key-icon" aria-hidden="true"><i class="fa-solid fa-key"></i></div>
+              <h2 class="card-title">Connect to Gemini AI</h2>
+              <p class="card-desc">To power StadiumAI's intelligent assistant, you'll need a Gemini API key. It takes less than a minute to get one for free.</p>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="api-key-link" id="ai-studio-link">
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                Get a key from Google AI Studio
+              </a>
+              <div class="api-key-form">
+                <label for="api-key-input" class="sr-only">Enter your Gemini API key</label>
+                <div class="input-group">
+                  <i class="fa-solid fa-lock input-icon" aria-hidden="true"></i>
+                  <input type="password" id="api-key-input" class="input" placeholder="Paste your Gemini API key here…" autocomplete="off" spellcheck="false" aria-label="Gemini API key">
+                  <button id="toggle-key-visibility" class="input-action" aria-label="Show or hide API key">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <button id="save-api-key" class="btn btn-primary btn-glow btn-full">
+                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                  Save &amp; Connect
+                </button>
+              </div>
+              <p class="api-key-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Your key is stored locally and never sent to our servers.</p>
+            </div>
+          </div>
+
+          <!-- Chat Container -->
+          <div id="chat-container" class="chat-container" data-state="hidden" aria-label="AI Chat">
+
+            <!-- Chat Header -->
+            <div class="chat-header">
+              <div class="chat-header-left">
+                <div class="chat-avatar" aria-hidden="true">
+                  <i class="fa-solid fa-robot"></i>
+                  <span class="chat-status-dot" title="Online"></span>
+                </div>
+                <div class="chat-header-info">
+                  <span class="chat-name">StadiumAI Assistant</span>
+                  <span class="chat-status" id="chat-status">Online</span>
+                </div>
+              </div>
+              <div class="chat-header-right">
+                <button id="clear-chat" class="btn btn-ghost btn-sm" aria-label="Clear chat history">
+                  <i class="fa-solid fa-broom" aria-hidden="true"></i>
+                  Clear
+                </button>
+                <button id="change-api-key" class="btn btn-ghost btn-sm" aria-label="Change API key">
+                  <i class="fa-solid fa-key" aria-hidden="true"></i>
+                  Key
+                </button>
+              </div>
+            </div>
+
+            <!-- Suggested Prompts -->
+            <div class="suggested-prompts" aria-label="Suggested questions">
+              <button class="prompt-chip" data-prompt="How do I get to MetLife Stadium?">
+                <i class="fa-solid fa-directions" aria-hidden="true"></i>
+                How do I get to MetLife Stadium?
+              </button>
+              <button class="prompt-chip" data-prompt="What accessibility services are available?">
+                <i class="fa-solid fa-wheelchair-move" aria-hidden="true"></i>
+                What accessibility services are available?
+              </button>
+              <button class="prompt-chip" data-prompt="Show me nearby food options">
+                <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                Show me nearby food options
+              </button>
+              <button class="prompt-chip" data-prompt="Current crowd levels at Gate A">
+                <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+                Current crowd levels at Gate A
+              </button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Chat messages">
+              <div class="message message--ai" data-role="assistant">
+                <div class="message-avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
+                <div class="message-bubble">
+                  <p>👋 Hello! I'm your <strong>StadiumAI Assistant</strong> for FIFA World Cup 2026™.</p>
+                  <p>I can help you with navigation, crowd updates, food options, accessibility info, transportation, and much more. How can I assist you today?</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <label for="chat-input" class="sr-only">Type your message</label>
+                <textarea id="chat-input" class="chat-input" placeholder="Ask StadiumAI anything about the World Cup…" rows="1" aria-label="Chat message input"></textarea>
+                <div class="chat-input-controls">
+                  <span class="chat-lang-indicator" id="chat-lang-indicator" aria-label="Chat language: English">EN</span>
+                  <button id="send-btn" class="send-btn" aria-label="Send message" disabled>
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 3: NAVIGATOR
+        ══════════════════════════════════════ -->
+        <section id="tab-navigator" class="tab-panel" role="tabpanel" aria-labelledby="nav-navigator">
+          <div class="navigator-layout">
+
+            <!-- Map Area -->
+            <div id="stadium-map-container" class="stadium-map-container">
+              <svg id="stadium-map" class="stadium-map" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive stadium map showing gates, stands, concourse, and facilities">
+                <defs>
+                  <!-- Gradients -->
+                  <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2ecc40;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="standGradN" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="standGradS" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="standGradE" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="standGradW" x1="100%" y1="0%" x2="0%" y2="0%">
+                    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="concourseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#334155;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#475569;stop-opacity:1"/>
+                  </linearGradient>
+                  <linearGradient id="vipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1"/>
+                  </linearGradient>
+                  <filter id="mapShadow" x="-5%" y="-5%" width="110%" height="110%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.2"/>
+                  </filter>
+                </defs>
+
+                <!-- Background -->
+                <rect width="800" height="600" rx="16" fill="#1e293b"/>
+
+                <!-- Outer Concourse Ring -->
+                <ellipse cx="400" cy="300" rx="370" ry="270" fill="url(#concourseGrad)" stroke="#64748b" stroke-width="2" filter="url(#mapShadow)" data-zone="concourse"/>
+
+                <!-- Stands — North -->
+                <path d="M200,95 Q400,30 600,95 L560,160 Q400,110 240,160 Z" fill="url(#standGradN)" stroke="#4f46e5" stroke-width="1.5" data-zone="north-stand" class="map-zone" tabindex="0" role="button" aria-label="North Stand"/>
+                <text x="400" y="120" text-anchor="middle" fill="#fff" font-size="14" font-weight="600" class="map-label">North Stand</text>
+
+                <!-- Stands — South -->
+                <path d="M200,505 Q400,570 600,505 L560,440 Q400,490 240,440 Z" fill="url(#standGradS)" stroke="#4f46e5" stroke-width="1.5" data-zone="south-stand" class="map-zone" tabindex="0" role="button" aria-label="South Stand"/>
+                <text x="400" y="485" text-anchor="middle" fill="#fff" font-size="14" font-weight="600" class="map-label">South Stand</text>
+
+                <!-- Stands — East -->
+                <path d="M665,140 Q740,300 665,460 L600,420 Q655,300 600,180 Z" fill="url(#standGradE)" stroke="#7c3aed" stroke-width="1.5" data-zone="east-stand" class="map-zone" tabindex="0" role="button" aria-label="East Stand"/>
+                <text x="655" y="305" text-anchor="middle" fill="#fff" font-size="13" font-weight="600" transform="rotate(90,655,305)" class="map-label">East Stand</text>
+
+                <!-- Stands — West -->
+                <path d="M135,140 Q60,300 135,460 L200,420 Q145,300 200,180 Z" fill="url(#standGradW)" stroke="#7c3aed" stroke-width="1.5" data-zone="west-stand" class="map-zone" tabindex="0" role="button" aria-label="West Stand"/>
+                <text x="145" y="305" text-anchor="middle" fill="#fff" font-size="13" font-weight="600" transform="rotate(-90,145,305)" class="map-label">West Stand</text>
+
+                <!-- VIP Section -->
+                <rect x="230" y="410" width="140" height="30" rx="6" fill="url(#vipGrad)" stroke="#d97706" stroke-width="1" data-zone="vip" class="map-zone" tabindex="0" role="button" aria-label="VIP Section"/>
+                <text x="300" y="430" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700" class="map-label">VIP</text>
+
+                <rect x="430" y="410" width="140" height="30" rx="6" fill="url(#vipGrad)" stroke="#d97706" stroke-width="1" data-zone="vip-2" class="map-zone" tabindex="0" role="button" aria-label="VIP Section 2"/>
+                <text x="500" y="430" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700" class="map-label">VIP</text>
+
+                <!-- Playing Field -->
+                <rect x="220" y="170" width="360" height="260" rx="12" fill="url(#fieldGrad)" stroke="#fff" stroke-width="2" filter="url(#mapShadow)" data-zone="field"/>
+                <!-- Field markings -->
+                <line x1="400" y1="170" x2="400" y2="430" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+                <circle cx="400" cy="300" r="45" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+                <circle cx="400" cy="300" r="3" fill="#fff" opacity="0.8"/>
+                <!-- Penalty areas -->
+                <rect x="220" y="235" width="70" height="130" rx="0" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.5"/>
+                <rect x="510" y="235" width="70" height="130" rx="0" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.5"/>
+                <!-- Goal areas -->
+                <rect x="220" y="265" width="30" height="70" rx="0" fill="none" stroke="#fff" stroke-width="1" opacity="0.4"/>
+                <rect x="550" y="265" width="30" height="70" rx="0" fill="none" stroke="#fff" stroke-width="1" opacity="0.4"/>
+                <text x="400" y="305" text-anchor="middle" fill="#fff" font-size="16" font-weight="700" opacity="0.8" class="map-label">FIELD</text>
+
+                <!-- Gates -->
+                <g data-zone="gate-a" class="map-gate" tabindex="0" role="button" aria-label="Gate A — North entrance">
+                  <rect x="370" y="42" width="60" height="28" rx="6" fill="#10b981" stroke="#059669" stroke-width="1.5"/>
+                  <text x="400" y="61" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Gate A</text>
+                </g>
+                <g data-zone="gate-b" class="map-gate" tabindex="0" role="button" aria-label="Gate B — East entrance">
+                  <rect x="720" y="286" width="60" height="28" rx="6" fill="#10b981" stroke="#059669" stroke-width="1.5"/>
+                  <text x="750" y="305" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Gate B</text>
+                </g>
+                <g data-zone="gate-c" class="map-gate" tabindex="0" role="button" aria-label="Gate C — South entrance">
+                  <rect x="370" y="530" width="60" height="28" rx="6" fill="#10b981" stroke="#059669" stroke-width="1.5"/>
+                  <text x="400" y="549" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Gate C</text>
+                </g>
+                <g data-zone="gate-d" class="map-gate" tabindex="0" role="button" aria-label="Gate D — West entrance">
+                  <rect x="20" y="286" width="60" height="28" rx="6" fill="#10b981" stroke="#059669" stroke-width="1.5"/>
+                  <text x="50" y="305" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Gate D</text>
+                </g>
+
+                <!-- Facilities: Medical -->
+                <g data-zone="medical" class="map-poi" tabindex="0" role="button" aria-label="Medical station">
+                  <circle cx="130" cy="140" r="16" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+                  <text x="130" y="145" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">+</text>
+                  <text x="130" y="170" text-anchor="middle" fill="#94a3b8" font-size="10" class="map-label">Medical</text>
+                </g>
+
+                <!-- Facilities: Restrooms 1 -->
+                <g data-zone="restrooms-1" class="map-poi" tabindex="0" role="button" aria-label="Restrooms — North West">
+                  <circle cx="180" cy="85" r="14" fill="#3b82f6" stroke="#fff" stroke-width="1.5"/>
+                  <text x="180" y="90" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">WC</text>
+                  <text x="180" y="112" text-anchor="middle" fill="#94a3b8" font-size="9" class="map-label">Restrooms</text>
+                </g>
+
+                <!-- Facilities: Restrooms 2 -->
+                <g data-zone="restrooms-2" class="map-poi" tabindex="0" role="button" aria-label="Restrooms — South East">
+                  <circle cx="620" cy="515" r="14" fill="#3b82f6" stroke="#fff" stroke-width="1.5"/>
+                  <text x="620" y="520" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">WC</text>
+                  <text x="620" y="542" text-anchor="middle" fill="#94a3b8" font-size="9" class="map-label">Restrooms</text>
+                </g>
+
+                <!-- Facilities: Concessions / Food Court -->
+                <g data-zone="food-court" class="map-poi" tabindex="0" role="button" aria-label="Food Court">
+                  <circle cx="670" cy="140" r="16" fill="#f97316" stroke="#fff" stroke-width="1.5"/>
+                  <text x="670" y="145" text-anchor="middle" fill="#fff" font-size="13">🍔</text>
+                  <text x="670" y="170" text-anchor="middle" fill="#94a3b8" font-size="10" class="map-label">Food Court</text>
+                </g>
+
+                <!-- Facilities: Accessibility -->
+                <g data-zone="accessibility" class="map-poi" tabindex="0" role="button" aria-label="Accessibility services">
+                  <circle cx="130" cy="460" r="16" fill="#6366f1" stroke="#fff" stroke-width="1.5"/>
+                  <text x="130" y="465" text-anchor="middle" fill="#fff" font-size="13">♿</text>
+                  <text x="130" y="490" text-anchor="middle" fill="#94a3b8" font-size="10" class="map-label">Accessible</text>
+                </g>
+
+                <!-- Facilities: Info Desk -->
+                <g data-zone="info-desk" class="map-poi" tabindex="0" role="button" aria-label="Information desk">
+                  <circle cx="670" cy="460" r="16" fill="#0ea5e9" stroke="#fff" stroke-width="1.5"/>
+                  <text x="670" y="465" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">i</text>
+                  <text x="670" y="490" text-anchor="middle" fill="#94a3b8" font-size="10" class="map-label">Info Desk</text>
+                </g>
+              </svg>
+
+              <!-- Map Controls -->
+              <div class="map-controls" aria-label="Map controls">
+                <button id="map-zoom-in" class="map-ctrl-btn" aria-label="Zoom in"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                <button id="map-zoom-out" class="map-ctrl-btn" aria-label="Zoom out"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+                <button id="map-reset" class="map-ctrl-btn" aria-label="Reset view"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+                <button id="map-toggle-labels" class="map-ctrl-btn" aria-label="Toggle labels" aria-pressed="true"><i class="fa-solid fa-tag" aria-hidden="true"></i></button>
+              </div>
+
+              <!-- Legend -->
+              <div class="map-legend" aria-label="Map legend">
+                <h4 class="legend-title">Legend</h4>
+                <ul class="legend-list">
+                  <li><span class="legend-swatch" style="background:#6366f1"></span> Seating</li>
+                  <li><span class="legend-swatch" style="background:#f97316"></span> Concessions</li>
+                  <li><span class="legend-swatch" style="background:#3b82f6"></span> Restrooms</li>
+                  <li><span class="legend-swatch" style="background:#ef4444"></span> Medical</li>
+                  <li><span class="legend-swatch" style="background:#10b981"></span> Exits</li>
+                  <li><span class="legend-swatch" style="background:#6366f1"></span> Accessibility</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Navigator Sidebar -->
+            <aside class="nav-sidebar" aria-label="Navigation tools">
+              <h3 class="nav-sidebar-title"><i class="fa-solid fa-compass" aria-hidden="true"></i> Wayfinder</h3>
+
+              <!-- Search -->
+              <div class="nav-field">
+                <label for="nav-search" class="sr-only">Search location</label>
+                <div class="input-group">
+                  <i class="fa-solid fa-magnifying-glass input-icon" aria-hidden="true"></i>
+                  <input type="text" id="nav-search" class="input" placeholder="Search location…" autocomplete="off">
+                </div>
+              </div>
+
+              <!-- From / To -->
+              <div class="nav-field">
+                <label for="from-location">Your Location</label>
+                <select id="from-location" class="input">
+                  <option value="">Select your location…</option>
+                  <option value="gate-a">Gate A</option>
+                  <option value="gate-b">Gate B</option>
+                  <option value="gate-c">Gate C</option>
+                  <option value="gate-d">Gate D</option>
+                  <option value="concourse-n">North Concourse</option>
+                  <option value="concourse-s">South Concourse</option>
+                  <option value="food-court">Food Court</option>
+                  <option value="restrooms-1">Restrooms — NW</option>
+                </select>
+              </div>
+              <div class="nav-field">
+                <label for="to-location">Destination</label>
+                <select id="to-location" class="input">
+                  <option value="">Select destination…</option>
+                  <option value="section-101">Section 101</option>
+                  <option value="section-205">Section 205</option>
+                  <option value="section-310">Section 310</option>
+                  <option value="vip-lounge">VIP Lounge</option>
+                  <option value="food-court">Food Court</option>
+                  <option value="medical">Medical Station</option>
+                  <option value="restrooms-1">Restrooms — NW</option>
+                  <option value="restrooms-2">Restrooms — SE</option>
+                  <option value="info-desk">Info Desk</option>
+                </select>
+              </div>
+
+              <!-- Route Options -->
+              <fieldset class="nav-options">
+                <legend class="sr-only">Route options</legend>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="opt-wheelchair" data-option="wheelchair">
+                  <span>Wheelchair accessible</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="opt-stairs" data-option="stairs">
+                  <span>Avoid stairs</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="opt-crowds" data-option="crowds">
+                  <span>Avoid crowds</span>
+                </label>
+              </fieldset>
+
+              <button id="get-directions" class="btn btn-primary btn-full">
+                <i class="fa-solid fa-diamond-turn-right" aria-hidden="true"></i>
+                Get AI Directions
+              </button>
+
+              <!-- Directions Result -->
+              <div id="directions-result" class="directions-result" hidden aria-live="polite"></div>
+
+              <!-- Nearby POI -->
+              <h4 class="nav-sidebar-subtitle">Nearby</h4>
+              <div class="poi-cards">
+                <div class="poi-card" data-poi="first-aid">
+                  <i class="fa-solid fa-kit-medical poi-icon poi-icon--medical" aria-hidden="true"></i>
+                  <div class="poi-info">
+                    <span class="poi-name">First Aid</span>
+                    <span class="poi-distance">120m away</span>
+                  </div>
+                </div>
+                <div class="poi-card" data-poi="restroom">
+                  <i class="fa-solid fa-restroom poi-icon poi-icon--restroom" aria-hidden="true"></i>
+                  <div class="poi-info">
+                    <span class="poi-name">Restroom</span>
+                    <span class="poi-distance">45m away</span>
+                  </div>
+                </div>
+                <div class="poi-card" data-poi="food">
+                  <i class="fa-solid fa-burger poi-icon poi-icon--food" aria-hidden="true"></i>
+                  <div class="poi-info">
+                    <span class="poi-name">Food Court</span>
+                    <span class="poi-distance">200m away</span>
+                  </div>
+                </div>
+                <div class="poi-card" data-poi="info">
+                  <i class="fa-solid fa-circle-info poi-icon poi-icon--info" aria-hidden="true"></i>
+                  <div class="poi-info">
+                    <span class="poi-name">Info Desk</span>
+                    <span class="poi-distance">85m away</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 4: CROWD INTEL
+        ══════════════════════════════════════ -->
+        <section id="tab-crowd" class="tab-panel" role="tabpanel" aria-labelledby="nav-crowd">
+          <h2 class="tab-header">Real-Time Crowd Intelligence</h2>
+
+          <!-- Overall Stats -->
+          <div class="metrics-row" data-animate="stagger">
+            <div class="metric-card" data-metric="occupancy">
+              <div class="metric-ring" data-value="73" aria-label="73 percent occupancy">
+                <svg viewBox="0 0 120 120" class="ring-svg">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="#334155" stroke-width="10"/>
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="#6366f1" stroke-width="10" stroke-dasharray="326.73" stroke-dashoffset="88.22" stroke-linecap="round" transform="rotate(-90 60 60)" class="ring-progress"/>
+                </svg>
+                <span class="ring-value">73%</span>
+              </div>
+              <span class="metric-label">Current Occupancy</span>
+            </div>
+            <div class="metric-card" data-metric="entry-rate">
+              <div class="metric-big-value">
+                <span class="metric-number">1,240</span><span class="metric-unit">/hr</span>
+              </div>
+              <span class="metric-trend metric-trend--up"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> 12%</span>
+              <span class="metric-label">Entry Rate</span>
+            </div>
+            <div class="metric-card" data-metric="wait-time">
+              <div class="metric-big-value">
+                <span class="metric-number">8</span><span class="metric-unit"> min</span>
+              </div>
+              <span class="metric-label">Avg Wait Time</span>
+            </div>
+            <div class="metric-card" data-metric="prediction">
+              <div class="metric-icon-box"><i class="fa-solid fa-brain" aria-hidden="true"></i></div>
+              <span class="metric-prediction">Peak in 45min</span>
+              <span class="metric-label">AI Prediction</span>
+            </div>
+          </div>
+
+          <!-- Crowd Heatmap -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-fire" aria-hidden="true"></i> Crowd Density Heatmap</h3>
+            <p class="card-desc">Real-time density visualization across stadium zones.</p>
+            <div id="crowd-heatmap" class="crowd-heatmap" role="img" aria-label="Stadium crowd heatmap showing density by zone">
+              <!-- Row 1 -->
+              <div class="heatmap-cell heat-low" data-zone="NW-1" title="NW Section 1 — Low">NW-1</div>
+              <div class="heatmap-cell heat-low" data-zone="N-1" title="North 1 — Low">N-1</div>
+              <div class="heatmap-cell heat-med" data-zone="N-2" title="North 2 — Medium">N-2</div>
+              <div class="heatmap-cell heat-high" data-zone="N-3" title="North 3 — High">N-3</div>
+              <div class="heatmap-cell heat-med" data-zone="N-4" title="North 4 — Medium">N-4</div>
+              <div class="heatmap-cell heat-low" data-zone="NE-1" title="NE Section 1 — Low">NE-1</div>
+              <!-- Row 2 -->
+              <div class="heatmap-cell heat-med" data-zone="W-1" title="West 1 — Medium">W-1</div>
+              <div class="heatmap-cell heat-low" data-zone="NW-I" title="NW Inner — Low">NW-I</div>
+              <div class="heatmap-cell heat-field" data-zone="Field-N" title="Field North">⚽</div>
+              <div class="heatmap-cell heat-field" data-zone="Field-C" title="Field Center">⚽</div>
+              <div class="heatmap-cell heat-low" data-zone="NE-I" title="NE Inner — Low">NE-I</div>
+              <div class="heatmap-cell heat-high" data-zone="E-1" title="East 1 — High">E-1</div>
+              <!-- Row 3 -->
+              <div class="heatmap-cell heat-high" data-zone="W-2" title="West 2 — High">W-2</div>
+              <div class="heatmap-cell heat-med" data-zone="SW-I" title="SW Inner — Medium">SW-I</div>
+              <div class="heatmap-cell heat-field" data-zone="Field-S" title="Field South">⚽</div>
+              <div class="heatmap-cell heat-field" data-zone="Field-SE" title="Field SE">⚽</div>
+              <div class="heatmap-cell heat-critical" data-zone="SE-I" title="SE Inner — Critical">SE-I</div>
+              <div class="heatmap-cell heat-critical" data-zone="E-2" title="East 2 — Critical">E-2</div>
+              <!-- Row 4 -->
+              <div class="heatmap-cell heat-med" data-zone="SW-1" title="SW Section 1 — Medium">SW-1</div>
+              <div class="heatmap-cell heat-high" data-zone="S-1" title="South 1 — High">S-1</div>
+              <div class="heatmap-cell heat-critical" data-zone="S-2" title="South 2 — Critical">S-2</div>
+              <div class="heatmap-cell heat-high" data-zone="S-3" title="South 3 — High">S-3</div>
+              <div class="heatmap-cell heat-med" data-zone="S-4" title="South 4 — Medium">S-4</div>
+              <div class="heatmap-cell heat-med" data-zone="SE-1" title="SE Section 1 — Medium">SE-1</div>
+            </div>
+            <div class="heatmap-scale" aria-label="Color scale">
+              <span class="scale-label">Low</span>
+              <span class="scale-swatch heat-low"></span>
+              <span class="scale-swatch heat-med"></span>
+              <span class="scale-swatch heat-high"></span>
+              <span class="scale-swatch heat-critical"></span>
+              <span class="scale-label">Critical</span>
+            </div>
+          </div>
+
+          <!-- Zone Breakdown Table -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> Zone Breakdown</h3>
+            <div class="table-responsive">
+              <table id="zone-table" class="data-table" aria-label="Stadium zone occupancy data">
+                <thead>
+                  <tr>
+                    <th scope="col">Zone</th>
+                    <th scope="col">Capacity</th>
+                    <th scope="col">Current</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Trend</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-zone-row="north">
+                    <td><strong>North Stand</strong></td>
+                    <td>18,500</td>
+                    <td>14,200</td>
+                    <td><span class="status-badge status-high">High (77%)</span></td>
+                    <td><span class="trend-up"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Rising</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="north">View</button></td>
+                  </tr>
+                  <tr data-zone-row="south">
+                    <td><strong>South Stand</strong></td>
+                    <td>18,500</td>
+                    <td>16,800</td>
+                    <td><span class="status-badge status-critical">Critical (91%)</span></td>
+                    <td><span class="trend-up"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Rising</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="south">View</button></td>
+                  </tr>
+                  <tr data-zone-row="east">
+                    <td><strong>East Stand</strong></td>
+                    <td>12,000</td>
+                    <td>10,560</td>
+                    <td><span class="status-badge status-high">High (88%)</span></td>
+                    <td><span class="trend-stable"><i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i> Stable</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="east">View</button></td>
+                  </tr>
+                  <tr data-zone-row="west">
+                    <td><strong>West Stand</strong></td>
+                    <td>12,000</td>
+                    <td>7,200</td>
+                    <td><span class="status-badge status-moderate">Moderate (60%)</span></td>
+                    <td><span class="trend-down"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Falling</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="west">View</button></td>
+                  </tr>
+                  <tr data-zone-row="concourse-n">
+                    <td><strong>North Concourse</strong></td>
+                    <td>5,000</td>
+                    <td>3,100</td>
+                    <td><span class="status-badge status-moderate">Moderate (62%)</span></td>
+                    <td><span class="trend-up"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Rising</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="concourse-n">View</button></td>
+                  </tr>
+                  <tr data-zone-row="concourse-s">
+                    <td><strong>South Concourse</strong></td>
+                    <td>5,000</td>
+                    <td>4,600</td>
+                    <td><span class="status-badge status-critical">Critical (92%)</span></td>
+                    <td><span class="trend-up"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Rising</span></td>
+                    <td><button class="btn btn-sm btn-ghost" data-action="zone-detail" data-zone="concourse-s">View</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- AI Insights -->
+          <div id="crowd-insights" class="insights-grid" data-animate="stagger">
+            <div class="insight-card" data-insight="1">
+              <div class="insight-icon insight-icon--warning" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <h4 class="insight-title">South Concourse Alert</h4>
+              <p class="insight-text">South concourse is approaching critical density. AI recommends opening auxiliary Gate E and deploying 4 additional staff to direct foot traffic via the West corridor.</p>
+              <span class="insight-tag">High Priority</span>
+            </div>
+            <div class="insight-card" data-insight="2">
+              <div class="insight-icon insight-icon--info" aria-hidden="true"><i class="fa-solid fa-lightbulb"></i></div>
+              <h4 class="insight-title">Halftime Prediction</h4>
+              <p class="insight-text">Based on historical data, concession areas will see a 340% surge in 12 minutes. Pre-staging additional vendors at North and East food courts is recommended.</p>
+              <span class="insight-tag">Prediction</span>
+            </div>
+            <div class="insight-card" data-insight="3">
+              <div class="insight-icon insight-icon--success" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></div>
+              <h4 class="insight-title">Entry Flow Optimized</h4>
+              <p class="insight-text">Gate A throughput improved by 23% after AI-suggested lane reconfiguration. Average entry time reduced from 4.2 to 3.1 minutes per fan.</p>
+              <span class="insight-tag">Success</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 5: TRANSPORT
+        ══════════════════════════════════════ -->
+        <section id="tab-transport" class="tab-panel" role="tabpanel" aria-labelledby="nav-transport">
+          <h2 class="tab-header">Smart Transportation Hub</h2>
+
+          <!-- Transport Mode Tabs -->
+          <div class="transport-modes" role="tablist" aria-label="Transport mode">
+            <button class="mode-tab active" id="mode-driving" role="tab" aria-selected="true" data-mode="driving">
+              <i class="fa-solid fa-car" aria-hidden="true"></i> Driving
+            </button>
+            <button class="mode-tab" id="mode-transit" role="tab" aria-selected="false" data-mode="transit">
+              <i class="fa-solid fa-train" aria-hidden="true"></i> Public Transit
+            </button>
+            <button class="mode-tab" id="mode-rideshare" role="tab" aria-selected="false" data-mode="rideshare">
+              <i class="fa-solid fa-taxi" aria-hidden="true"></i> Rideshare
+            </button>
+            <button class="mode-tab" id="mode-walking" role="tab" aria-selected="false" data-mode="walking">
+              <i class="fa-solid fa-person-walking" aria-hidden="true"></i> Walking
+            </button>
+          </div>
+
+          <!-- Route Planner -->
+          <div class="card route-planner" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-route" aria-hidden="true"></i> Route Planner</h3>
+            <div class="route-form">
+              <div class="route-field">
+                <label for="transport-from">From</label>
+                <div class="input-group">
+                  <i class="fa-solid fa-location-crosshairs input-icon" aria-hidden="true"></i>
+                  <input type="text" id="transport-from" class="input" placeholder="Enter starting location…" autocomplete="off">
+                </div>
+              </div>
+              <div class="route-field">
+                <label for="transport-to">To</label>
+                <select id="transport-to" class="input">
+                  <option value="">Select venue…</option>
+                  <option value="metlife">MetLife Stadium, NJ</option>
+                  <option value="sofi">SoFi Stadium, LA</option>
+                  <option value="azteca">Estadio Azteca, Mexico City</option>
+                  <option value="atnt">AT&amp;T Stadium, Dallas</option>
+                  <option value="hard-rock">Hard Rock Stadium, Miami</option>
+                  <option value="bmo">BMO Stadium, LA</option>
+                  <option value="lumen">Lumen Field, Seattle</option>
+                  <option value="nrg">NRG Stadium, Houston</option>
+                  <option value="bc-place">BC Place, Vancouver</option>
+                  <option value="lincoln">Lincoln Financial Field, Philadelphia</option>
+                  <option value="arrowhead">Arrowhead Stadium, Kansas City</option>
+                  <option value="mercedes">Mercedes-Benz Stadium, Atlanta</option>
+                  <option value="gillette">Gillette Stadium, Boston</option>
+                  <option value="guadalajara">Estadio Akron, Guadalajara</option>
+                  <option value="monterrey">Estadio BBVA, Monterrey</option>
+                  <option value="bay-area">Bay Area Stadium, SF</option>
+                </select>
+              </div>
+              <div class="route-field">
+                <label for="transport-time">Departure Time</label>
+                <input type="datetime-local" id="transport-time" class="input">
+              </div>
+              <button id="find-routes" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                Find Routes
+              </button>
+            </div>
+          </div>
+
+          <!-- Route Results -->
+          <div id="transport-results" class="transport-results" aria-live="polite">
+            <div class="route-card" data-route="1">
+              <div class="route-mode-icon"><i class="fa-solid fa-car" aria-hidden="true"></i></div>
+              <div class="route-details">
+                <span class="route-duration">45 min</span>
+                <span class="route-distance">32.4 mi</span>
+              </div>
+              <div class="route-meta">
+                <span class="route-co2"><i class="fa-solid fa-leaf" aria-hidden="true"></i> 8.2 kg CO₂</span>
+                <span class="route-cost"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> ~$12 toll</span>
+              </div>
+            </div>
+            <div class="route-card" data-route="2">
+              <div class="route-mode-icon route-mode--transit"><i class="fa-solid fa-train" aria-hidden="true"></i></div>
+              <div class="route-details">
+                <span class="route-duration">1h 05 min</span>
+                <span class="route-distance">28.1 mi</span>
+              </div>
+              <div class="route-meta">
+                <span class="route-co2 route-co2--low"><i class="fa-solid fa-leaf" aria-hidden="true"></i> 1.4 kg CO₂</span>
+                <span class="route-cost"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> $5.50</span>
+              </div>
+            </div>
+            <div class="route-card" data-route="3">
+              <div class="route-mode-icon route-mode--rideshare"><i class="fa-solid fa-taxi" aria-hidden="true"></i></div>
+              <div class="route-details">
+                <span class="route-duration">40 min</span>
+                <span class="route-distance">32.4 mi</span>
+              </div>
+              <div class="route-meta">
+                <span class="route-co2"><i class="fa-solid fa-leaf" aria-hidden="true"></i> 7.8 kg CO₂</span>
+                <span class="route-cost"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> $45–$60</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Conditions -->
+          <div class="transport-grid">
+            <!-- Traffic Status -->
+            <div class="card" data-animate="fade-up">
+              <h3 class="card-title"><i class="fa-solid fa-traffic-light" aria-hidden="true"></i> Live Traffic</h3>
+              <div class="traffic-cards">
+                <div class="traffic-card traffic-status--heavy" data-route="i-95">
+                  <span class="traffic-route">I-95 North</span>
+                  <span class="traffic-badge traffic-badge--heavy">Heavy</span>
+                  <span class="traffic-delay">+25 min</span>
+                </div>
+                <div class="traffic-card traffic-status--moderate" data-route="rt-3">
+                  <span class="traffic-route">Route 3 West</span>
+                  <span class="traffic-badge traffic-badge--moderate">Moderate</span>
+                  <span class="traffic-delay">+10 min</span>
+                </div>
+                <div class="traffic-card traffic-status--clear" data-route="nj-turnpike">
+                  <span class="traffic-route">NJ Turnpike</span>
+                  <span class="traffic-badge traffic-badge--clear">Clear</span>
+                  <span class="traffic-delay">On time</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Parking Availability -->
+            <div class="card" data-animate="fade-up">
+              <h3 class="card-title"><i class="fa-solid fa-square-parking" aria-hidden="true"></i> Parking Availability</h3>
+              <div id="parking-grid" class="parking-grid">
+                <div class="parking-lot parking-lot--available" data-lot="A">
+                  <span class="lot-name">Lot A</span>
+                  <span class="lot-status">Available</span>
+                  <span class="lot-count">342 spots</span>
+                </div>
+                <div class="parking-lot parking-lot--limited" data-lot="B">
+                  <span class="lot-name">Lot B</span>
+                  <span class="lot-status">Limited</span>
+                  <span class="lot-count">48 spots</span>
+                </div>
+                <div class="parking-lot parking-lot--full" data-lot="C">
+                  <span class="lot-name">Lot C</span>
+                  <span class="lot-status">Full</span>
+                  <span class="lot-count">0 spots</span>
+                </div>
+                <div class="parking-lot parking-lot--available" data-lot="D">
+                  <span class="lot-name">Lot D</span>
+                  <span class="lot-status">Available</span>
+                  <span class="lot-count">518 spots</span>
+                </div>
+                <div class="parking-lot parking-lot--limited" data-lot="E">
+                  <span class="lot-name">Lot E</span>
+                  <span class="lot-status">Limited</span>
+                  <span class="lot-count">22 spots</span>
+                </div>
+                <div class="parking-lot parking-lot--available" data-lot="VIP">
+                  <span class="lot-name">VIP Garage</span>
+                  <span class="lot-status">Available</span>
+                  <span class="lot-count">85 spots</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rideshare Section -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-taxi" aria-hidden="true"></i> Rideshare</h3>
+            <div class="rideshare-grid">
+              <div class="rideshare-card" data-provider="uber">
+                <span class="rideshare-name">Uber</span>
+                <span class="rideshare-eta"><i class="fa-solid fa-clock" aria-hidden="true"></i> 6 min</span>
+                <span class="rideshare-surge rideshare-surge--active"><i class="fa-solid fa-bolt" aria-hidden="true"></i> 1.8× surge</span>
+              </div>
+              <div class="rideshare-card" data-provider="lyft">
+                <span class="rideshare-name">Lyft</span>
+                <span class="rideshare-eta"><i class="fa-solid fa-clock" aria-hidden="true"></i> 4 min</span>
+                <span class="rideshare-surge"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Standard pricing</span>
+              </div>
+              <div class="rideshare-card" data-provider="official">
+                <span class="rideshare-name">FIFA Shuttle</span>
+                <span class="rideshare-eta"><i class="fa-solid fa-clock" aria-hidden="true"></i> 12 min</span>
+                <span class="rideshare-surge"><i class="fa-solid fa-leaf" aria-hidden="true"></i> Free — Eco</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 6: SUSTAINABILITY
+        ══════════════════════════════════════ -->
+        <section id="tab-sustainability" class="tab-panel" role="tabpanel" aria-labelledby="nav-sustainability">
+          <h2 class="tab-header">Sustainability Dashboard</h2>
+
+          <!-- Impact Metrics -->
+          <div class="metrics-row" data-animate="stagger">
+            <div class="metric-card metric-card--green" data-metric="carbon">
+              <div class="metric-icon-box"><i class="fa-solid fa-leaf" aria-hidden="true"></i></div>
+              <span class="metric-big-value"><span class="metric-number">12.4</span><span class="metric-unit"> tons</span></span>
+              <span class="metric-label">Carbon Saved</span>
+            </div>
+            <div class="metric-card metric-card--blue" data-metric="waste">
+              <div class="metric-icon-box"><i class="fa-solid fa-recycle" aria-hidden="true"></i></div>
+              <span class="metric-big-value"><span class="metric-number">78</span><span class="metric-unit">%</span></span>
+              <span class="metric-label">Waste Diverted</span>
+            </div>
+            <div class="metric-card metric-card--cyan" data-metric="water">
+              <div class="metric-icon-box"><i class="fa-solid fa-droplet" aria-hidden="true"></i></div>
+              <span class="metric-big-value"><span class="metric-number">45K</span><span class="metric-unit"> liters</span></span>
+              <span class="metric-label">Water Saved</span>
+            </div>
+            <div class="metric-card metric-card--yellow" data-metric="energy">
+              <div class="metric-icon-box"><i class="fa-solid fa-solar-panel" aria-hidden="true"></i></div>
+              <span class="metric-big-value"><span class="metric-number">92</span><span class="metric-unit">%</span></span>
+              <span class="metric-label">Green Energy</span>
+            </div>
+          </div>
+
+          <!-- Personal Carbon Tracker -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Your Personal Eco-Score</h3>
+            <div id="carbon-tracker" class="carbon-tracker">
+              <div class="eco-score-ring" aria-label="Eco score: 82 out of 100">
+                <svg viewBox="0 0 160 160" class="eco-ring-svg">
+                  <circle cx="80" cy="80" r="70" fill="none" stroke="#1e3a2f" stroke-width="12"/>
+                  <circle cx="80" cy="80" r="70" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="439.82" stroke-dashoffset="79.17" stroke-linecap="round" transform="rotate(-90 80 80)" class="eco-ring-progress"/>
+                </svg>
+                <div class="eco-score-text">
+                  <span class="eco-score-value">82</span>
+                  <span class="eco-score-label">Eco Score</span>
+                </div>
+              </div>
+              <div class="eco-breakdown">
+                <div class="eco-item" data-eco="transport">
+                  <i class="fa-solid fa-train eco-item-icon" aria-hidden="true"></i>
+                  <div class="eco-item-info">
+                    <span class="eco-item-label">Transport Choice</span>
+                    <span class="eco-item-detail">Public transit — saved 6.8 kg CO₂</span>
+                  </div>
+                  <span class="eco-item-badge eco-item-badge--great">Great</span>
+                </div>
+                <div class="eco-item" data-eco="food">
+                  <i class="fa-solid fa-seedling eco-item-icon" aria-hidden="true"></i>
+                  <div class="eco-item-info">
+                    <span class="eco-item-label">Food Choice</span>
+                    <span class="eco-item-detail">Plant-based meal — 70% less impact</span>
+                  </div>
+                  <span class="eco-item-badge eco-item-badge--great">Great</span>
+                </div>
+                <div class="eco-item" data-eco="waste">
+                  <i class="fa-solid fa-trash-can eco-item-icon" aria-hidden="true"></i>
+                  <div class="eco-item-info">
+                    <span class="eco-item-label">Waste Actions</span>
+                    <span class="eco-item-detail">2 of 3 items recycled correctly</span>
+                  </div>
+                  <span class="eco-item-badge eco-item-badge--good">Good</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Eco Tips -->
+          <h3 class="section-title"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> AI Eco Tips</h3>
+          <div id="eco-tips" class="insights-grid" data-animate="stagger">
+            <div class="insight-card insight-card--eco" data-tip="1">
+              <div class="insight-icon insight-icon--eco" aria-hidden="true"><i class="fa-solid fa-bottle-water"></i></div>
+              <h4 class="insight-title">Refill Station Nearby</h4>
+              <p class="insight-text">There's a free water refill station 30m to your left. Using it instead of buying a plastic bottle saves 82g of plastic waste.</p>
+            </div>
+            <div class="insight-card insight-card--eco" data-tip="2">
+              <div class="insight-icon insight-icon--eco" aria-hidden="true"><i class="fa-solid fa-bus"></i></div>
+              <h4 class="insight-title">Eco-Friendly Exit</h4>
+              <p class="insight-text">Post-match shuttle from Gate D runs on 100% electric buses. Departures every 5 min for 90 minutes after the final whistle.</p>
+            </div>
+            <div class="insight-card insight-card--eco" data-tip="3">
+              <div class="insight-icon insight-icon--eco" aria-hidden="true"><i class="fa-solid fa-sun"></i></div>
+              <h4 class="insight-title">Solar-Powered Venue</h4>
+              <p class="insight-text">This stadium runs on 92% renewable energy today. Your attendance is carbon-offset through FIFA's Green Goal program.</p>
+            </div>
+          </div>
+
+          <!-- Live Sustainability Feed -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-rss" aria-hidden="true"></i> Live Sustainability Feed</h3>
+            <div id="sustainability-feed" class="sustainability-feed" role="feed" aria-label="Real-time sustainability actions">
+              <div class="feed-item" data-feed="1">
+                <span class="feed-time">2 min ago</span>
+                <span class="feed-icon" aria-hidden="true">♻️</span>
+                <span class="feed-text">Section 204 achieved 95% waste diversion rate this quarter</span>
+              </div>
+              <div class="feed-item" data-feed="2">
+                <span class="feed-time">5 min ago</span>
+                <span class="feed-icon" aria-hidden="true">🚌</span>
+                <span class="feed-text">1,200 fans chose eco-shuttle today, saving 3.8 tons of CO₂</span>
+              </div>
+              <div class="feed-item" data-feed="3">
+                <span class="feed-time">12 min ago</span>
+                <span class="feed-icon" aria-hidden="true">💧</span>
+                <span class="feed-text">Water refill stations served 4,500 refills — 360kg plastic avoided</span>
+              </div>
+              <div class="feed-item" data-feed="4">
+                <span class="feed-time">18 min ago</span>
+                <span class="feed-icon" aria-hidden="true">☀️</span>
+                <span class="feed-text">Solar panels peaked at 2.4 MW output — powering 100% of concourse lighting</span>
+              </div>
+              <div class="feed-item" data-feed="5">
+                <span class="feed-time">25 min ago</span>
+                <span class="feed-icon" aria-hidden="true">🌱</span>
+                <span class="feed-text">Compostable packaging adoption reached 88% across all food vendors</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Green Initiatives Gallery -->
+          <h3 class="section-title"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i> Green Initiatives — WC 2026</h3>
+          <div class="initiatives-grid" data-animate="stagger">
+            <div class="initiative-card" data-initiative="1">
+              <div class="initiative-icon" aria-hidden="true"><i class="fa-solid fa-solar-panel"></i></div>
+              <h4 class="initiative-title">Net-Zero Stadiums</h4>
+              <p class="initiative-desc">All 16 venues committed to net-zero emissions during the tournament through renewable energy and carbon offsets.</p>
+            </div>
+            <div class="initiative-card" data-initiative="2">
+              <div class="initiative-icon" aria-hidden="true"><i class="fa-solid fa-recycle"></i></div>
+              <h4 class="initiative-title">Zero Waste to Landfill</h4>
+              <p class="initiative-desc">Target: 90%+ waste diversion through composting, recycling, and innovative material recovery programs.</p>
+            </div>
+            <div class="initiative-card" data-initiative="3">
+              <div class="initiative-icon" aria-hidden="true"><i class="fa-solid fa-tree"></i></div>
+              <h4 class="initiative-title">Legacy Reforestation</h4>
+              <p class="initiative-desc">Each goal scored plants 1,000 trees. Over 200,000 trees planted across North America since the program launched.</p>
+            </div>
+            <div class="initiative-card" data-initiative="4">
+              <div class="initiative-icon" aria-hidden="true"><i class="fa-solid fa-bicycle"></i></div>
+              <h4 class="initiative-title">Green Mobility Plan</h4>
+              <p class="initiative-desc">Free electric shuttles, expanded bike parking, and integrated public transit passes for all ticket holders.</p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ══════════════════════════════════════
+             TAB 7: OPERATIONS
+        ══════════════════════════════════════ -->
+        <section id="tab-operations" class="tab-panel" role="tabpanel" aria-labelledby="nav-operations">
+          <h2 class="tab-header">Operations Command Center</h2>
+
+          <!-- Alert Banner -->
+          <div id="ops-alerts" class="ops-alerts" role="alert" aria-live="assertive">
+            <div class="alert-marquee">
+              <span class="alert-item alert-item--warning"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> South Concourse nearing capacity — divert traffic to West corridor</span>
+              <span class="alert-item alert-item--info"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Weather advisory: Light rain expected at 20:00 — retractable roof closing in 15 min</span>
+              <span class="alert-item alert-item--success"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Gate B security queue cleared — throughput restored to normal</span>
+            </div>
+          </div>
+
+          <!-- KPI Dashboard -->
+          <div class="kpi-grid" data-animate="stagger">
+            <div class="kpi-card" data-kpi="staff">
+              <div class="kpi-icon"><i class="fa-solid fa-id-badge" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-staff">847</span>
+              <span class="kpi-label">Staff on Duty</span>
+            </div>
+            <div class="kpi-card" data-kpi="incidents">
+              <div class="kpi-icon"><i class="fa-solid fa-file-circle-exclamation" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-incidents">12</span>
+              <span class="kpi-label">Incidents Today</span>
+            </div>
+            <div class="kpi-card" data-kpi="response">
+              <div class="kpi-icon"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-response">3.2m</span>
+              <span class="kpi-label">Response Time</span>
+            </div>
+            <div class="kpi-card" data-kpi="satisfaction">
+              <div class="kpi-icon"><i class="fa-solid fa-face-smile" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-satisfaction">94%</span>
+              <span class="kpi-label">Fan Satisfaction</span>
+            </div>
+            <div class="kpi-card" data-kpi="facilities">
+              <div class="kpi-icon"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-facilities">98%</span>
+              <span class="kpi-label">Facilities Status</span>
+            </div>
+            <div class="kpi-card" data-kpi="security">
+              <div class="kpi-icon"><i class="fa-solid fa-shield" aria-hidden="true"></i></div>
+              <span class="kpi-value" id="kpi-security">High</span>
+              <span class="kpi-label">Security Level</span>
+            </div>
+          </div>
+
+          <!-- Incident Management -->
+          <div class="card" data-animate="fade-up">
+            <div class="card-header-row">
+              <h3 class="card-title"><i class="fa-solid fa-bell-concierge" aria-hidden="true"></i> Incident Management</h3>
+              <button id="report-incident" class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Report Incident
+              </button>
+            </div>
+            <div id="incident-panel" class="incident-list">
+              <!-- Incident 1: Critical -->
+              <div class="incident-item" data-incident="INC-001" data-severity="critical">
+                <div class="incident-severity severity-critical" aria-label="Critical severity">Critical</div>
+                <div class="incident-details">
+                  <h4 class="incident-type">Medical Emergency</h4>
+                  <div class="incident-meta">
+                    <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Section 312, Row F</span>
+                    <span><i class="fa-solid fa-clock" aria-hidden="true"></i> 3 min ago</span>
+                    <span><i class="fa-solid fa-user-group" aria-hidden="true"></i> Medical Team Alpha</span>
+                  </div>
+                  <p class="incident-ai-rec"><i class="fa-solid fa-robot" aria-hidden="true"></i> <strong>AI:</strong> Nearest AED is 45m away at Concourse C pillar 12. Paramedic ETA: 90 seconds.</p>
+                </div>
+              </div>
+              <!-- Incident 2: High -->
+              <div class="incident-item" data-incident="INC-002" data-severity="high">
+                <div class="incident-severity severity-high" aria-label="High severity">High</div>
+                <div class="incident-details">
+                  <h4 class="incident-type">Crowd Surge Detection</h4>
+                  <div class="incident-meta">
+                    <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Gate C Entry Tunnel</span>
+                    <span><i class="fa-solid fa-clock" aria-hidden="true"></i> 8 min ago</span>
+                    <span><i class="fa-solid fa-user-group" aria-hidden="true"></i> Crowd Control Unit 3</span>
+                  </div>
+                  <p class="incident-ai-rec"><i class="fa-solid fa-robot" aria-hidden="true"></i> <strong>AI:</strong> Recommend activating overflow lane and reducing entry throughput by 30% for 10 minutes.</p>
+                </div>
+              </div>
+              <!-- Incident 3: Medium -->
+              <div class="incident-item" data-incident="INC-003" data-severity="medium">
+                <div class="incident-severity severity-medium" aria-label="Medium severity">Medium</div>
+                <div class="incident-details">
+                  <h4 class="incident-type">Spill / Hazard</h4>
+                  <div class="incident-meta">
+                    <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> North Concourse, Food Court B</span>
+                    <span><i class="fa-solid fa-clock" aria-hidden="true"></i> 15 min ago</span>
+                    <span><i class="fa-solid fa-user-group" aria-hidden="true"></i> Facilities Team 7</span>
+                  </div>
+                  <p class="incident-ai-rec"><i class="fa-solid fa-robot" aria-hidden="true"></i> <strong>AI:</strong> Area flagged for wet floor. Estimated cleanup: 8 minutes. Rerouting nearby foot traffic.</p>
+                </div>
+              </div>
+              <!-- Incident 4: Low -->
+              <div class="incident-item" data-incident="INC-004" data-severity="low">
+                <div class="incident-severity severity-low" aria-label="Low severity">Low</div>
+                <div class="incident-details">
+                  <h4 class="incident-type">Lost & Found Report</h4>
+                  <div class="incident-meta">
+                    <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Info Desk, East Wing</span>
+                    <span><i class="fa-solid fa-clock" aria-hidden="true"></i> 22 min ago</span>
+                    <span><i class="fa-solid fa-user-group" aria-hidden="true"></i> Guest Services</span>
+                  </div>
+                  <p class="incident-ai-rec"><i class="fa-solid fa-robot" aria-hidden="true"></i> <strong>AI:</strong> Item logged. Nearest guest services kiosk is Info Desk East. Fan notified via app.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Staff Deployment -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-map-pin" aria-hidden="true"></i> Staff Deployment Overview</h3>
+            <div class="staff-deployment-grid" id="staff-deployment">
+              <div class="staff-zone" data-staff-zone="north">
+                <span class="staff-zone-name">North Stand</span>
+                <span class="staff-count">124 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:68%" data-fill="68"></div></div>
+              </div>
+              <div class="staff-zone" data-staff-zone="south">
+                <span class="staff-zone-name">South Stand</span>
+                <span class="staff-count">156 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:85%" data-fill="85"></div></div>
+              </div>
+              <div class="staff-zone" data-staff-zone="east">
+                <span class="staff-zone-name">East Stand</span>
+                <span class="staff-count">98 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:54%" data-fill="54"></div></div>
+              </div>
+              <div class="staff-zone" data-staff-zone="west">
+                <span class="staff-zone-name">West Stand</span>
+                <span class="staff-count">88 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:48%" data-fill="48"></div></div>
+              </div>
+              <div class="staff-zone" data-staff-zone="concourse">
+                <span class="staff-zone-name">Concourses</span>
+                <span class="staff-count">210 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:92%" data-fill="92"></div></div>
+              </div>
+              <div class="staff-zone" data-staff-zone="exterior">
+                <span class="staff-zone-name">Exterior / Gates</span>
+                <span class="staff-count">171 staff</span>
+                <div class="staff-bar"><div class="staff-bar-fill" style="width:76%" data-fill="76"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Communication Panel -->
+          <div class="card" data-animate="fade-up">
+            <h3 class="card-title"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Quick Broadcast</h3>
+            <div class="comm-panel">
+              <div class="comm-field">
+                <label for="broadcast-target">Broadcast to</label>
+                <select id="broadcast-target" class="input">
+                  <option value="all-staff">All Staff</option>
+                  <option value="security">Security Teams</option>
+                  <option value="medical">Medical Teams</option>
+                  <option value="facilities">Facilities</option>
+                  <option value="volunteers">Volunteers</option>
+                  <option value="crowd-control">Crowd Control</option>
+                </select>
+              </div>
+              <div class="comm-field">
+                <label for="broadcast-message">Message</label>
+                <textarea id="broadcast-message" class="input comm-textarea" rows="3" placeholder="Type broadcast message…" aria-label="Broadcast message"></textarea>
+              </div>
+              <div class="comm-actions">
+                <button id="send-broadcast" class="btn btn-primary">
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send Broadcast
+                </button>
+                <button id="send-emergency" class="btn btn-danger">
+                  <i class="fa-solid fa-siren-on" aria-hidden="true"></i> Emergency Alert
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div><!-- /content-container -->
+
+    </main>
+
+  </div><!-- /app-shell -->
+
+  <!-- ═══════════════════════════════════════════
+       SETTINGS MODAL
+  ════════════════════════════════════════════ -->
+  <div id="settings-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="modal" id="settings-modal-inner">
+      <div class="modal-header">
+        <h2 id="settings-title" class="modal-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Settings</h2>
+        <button id="close-settings" class="modal-close" aria-label="Close settings">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <!-- API Key Management -->
+        <fieldset class="settings-section">
+          <legend class="settings-legend">API Key</legend>
+          <div class="setting-row">
+            <label for="settings-api-key">Gemini API Key</label>
+            <div class="input-group">
+              <input type="password" id="settings-api-key" class="input" placeholder="Enter API key…" autocomplete="off">
+              <button id="settings-save-key" class="btn btn-sm btn-primary">Save</button>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Theme Toggle -->
+        <fieldset class="settings-section">
+          <legend class="settings-legend">Appearance</legend>
+          <div class="setting-row setting-row--toggle">
+            <label for="theme-toggle">Dark Mode</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="theme-toggle" checked aria-label="Toggle dark or light theme">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Language Preference -->
+        <fieldset class="settings-section">
+          <legend class="settings-legend">Language</legend>
+          <div class="setting-row">
+            <label for="settings-language">Preferred Language</label>
+            <select id="settings-language" class="input">
+              <option value="en" selected>English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="ar">Arabic</option>
+              <option value="pt">Portuguese</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="de">German</option>
+              <option value="zh">Mandarin</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <!-- Notifications -->
+        <fieldset class="settings-section">
+          <legend class="settings-legend">Notifications</legend>
+          <div class="setting-row setting-row--toggle">
+            <label for="notif-match">Match updates</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-match" checked aria-label="Toggle match update notifications">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row setting-row--toggle">
+            <label for="notif-crowd">Crowd alerts</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-crowd" checked aria-label="Toggle crowd alert notifications">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row setting-row--toggle">
+            <label for="notif-transport">Transport alerts</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-transport" checked aria-label="Toggle transport alert notifications">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Accessibility Preferences -->
+        <fieldset class="settings-section">
+          <legend class="settings-legend">Accessibility</legend>
+          <div class="setting-row setting-row--toggle">
+            <label for="a11y-contrast">High contrast mode</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="a11y-contrast" aria-label="Toggle high contrast mode">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row setting-row--toggle">
+            <label for="a11y-large-text">Large text</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="a11y-large-text" aria-label="Toggle large text mode">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row setting-row--toggle">
+            <label for="a11y-screen-reader">Screen reader optimized</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="a11y-screen-reader" aria-label="Toggle screen reader optimized mode">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </fieldset>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TOAST NOTIFICATION CONTAINER
+  ════════════════════════════════════════════ -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-label="Notifications"></div>
+
+  <!-- App Script -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
