@@ -1,0 +1,1522 @@
+/**
+ * ============================================================================
+ * FIFA World Cup 2026 — GenAI Stadium Operations Platform
+ * ============================================================================
+ *
+ * Single-file vanilla JavaScript application.
+ * Handles navigation, Gemini AI chat, stadium maps, crowd intelligence,
+ * transportation, sustainability, operations dashboards, and settings.
+ *
+ * No external dependencies. ES6+ syntax throughout.
+ * ============================================================================
+ */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   0. CONSTANTS & CONFIGURATION
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const CONFIG = {
+  geminiEndpoint:
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+  localStorageKeys: {
+    apiKey: 'stadiumai_gemini_key',
+    theme: 'stadiumai_theme',
+    language: 'stadiumai_language',
+    highContrast: 'stadiumai_high_contrast',
+    largeText: 'stadiumai_large_text',
+    settings: 'stadiumai_settings',
+  },
+  splashDuration: 3000,
+  crowdUpdateInterval: 30_000,
+  kpiUpdateInterval: 60_000,
+  sustainabilityFeedInterval: 8_000,
+  defaultTemperature: 0.7,
+  maxOutputTokens: 2048,
+};
+
+const SYSTEM_PROMPT = `You are StadiumAI, an intelligent AI assistant for the FIFA World Cup 2026. You help fans, organizers, volunteers, and venue staff with:
+- Stadium navigation and wayfinding
+- Real-time crowd information and safety
+- Transportation and parking guidance
+- Accessibility services and inclusive navigation
+- Food, beverages, and amenities locations
+- Match schedules, scores, and tournament info
+- Sustainability initiatives and eco-friendly choices
+- Emergency procedures and safety protocols
+- Multilingual assistance
+- Operational intelligence for staff
+
+The FIFA World Cup 2026 is hosted across 16 venues in the United States, Mexico, and Canada. Key venues include:
+- MetLife Stadium (New York/New Jersey) - Final venue
+- SoFi Stadium (Los Angeles)
+- AT&T Stadium (Dallas)
+- Hard Rock Stadium (Miami)
+- Estadio Azteca (Mexico City)
+- BMO Field (Toronto)
+- Lumen Field (Seattle)
+- Arrowhead Stadium (Kansas City)
+- NRG Stadium (Houston)
+- Mercedes-Benz Stadium (Atlanta)
+- Lincoln Financial Field (Philadelphia)
+- Gillette Stadium (Boston/Foxborough)
+- Levi's Stadium (San Francisco/Santa Clara)
+- Guadalajara Stadium (Guadalajara)
+- Estadio BBVA (Monterrey)
+- BC Place (Vancouver)
+
+Current date: July 2026. The tournament is ongoing.
+Respond helpfully, concisely, and in a friendly tone. Use emoji occasionally.
+If the user writes in a non-English language, respond in that same language.
+Format responses with markdown when helpful (bold, lists, etc.).
+For navigation queries, provide step-by-step directions.
+For crowd queries, provide estimated density levels and recommendations.
+Always prioritize safety information when relevant.`;
+
+const VENUES = [
+  { name: 'MetLife Stadium', city: 'New York/New Jersey', capacity: 82500, country: 'USA' },
+  { name: 'SoFi Stadium', city: 'Los Angeles', capacity: 70240, country: 'USA' },
+  { name: 'AT&T Stadium', city: 'Dallas', capacity: 80000, country: 'USA' },
+  { name: 'Hard Rock Stadium', city: 'Miami', capacity: 64767, country: 'USA' },
+  { name: 'Estadio Azteca', city: 'Mexico City', capacity: 87523, country: 'Mexico' },
+  { name: 'BMO Field', city: 'Toronto', capacity: 45500, country: 'Canada' },
+  { name: 'Lumen Field', city: 'Seattle', capacity: 68740, country: 'USA' },
+  { name: 'Arrowhead Stadium', city: 'Kansas City', capacity: 76416, country: 'USA' },
+  { name: 'NRG Stadium', city: 'Houston', capacity: 72220, country: 'USA' },
+  { name: 'Mercedes-Benz Stadium', city: 'Atlanta', capacity: 71000, country: 'USA' },
+  { name: 'Lincoln Financial Field', city: 'Philadelphia', capacity: 69796, country: 'USA' },
+  { name: 'Gillette Stadium', city: 'Boston/Foxborough', capacity: 65878, country: 'USA' },
+  { name: "Levi's Stadium", city: 'San Francisco/Santa Clara', capacity: 68500, country: 'USA' },
+  { name: 'Guadalajara Stadium', city: 'Guadalajara', capacity: 46355, country: 'Mexico' },
+  { name: 'Estadio BBVA', city: 'Monterrey', capacity: 53500, country: 'Mexico' },
+  { name: 'BC Place', city: 'Vancouver', capacity: 54500, country: 'Canada' },
+];
+
+/* ───────────────────────────────────────────────────────────────────────────
+   1. UTILITY FUNCTIONS
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Format a Date object to 'HH:MM' string.
+ * @param {Date} date
+ * @returns {string}
+ */
+const formatTime = (date) => {
+  const d = date instanceof Date ? date : new Date();
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+/**
+ * Animate a numeric value from 0 (or current) to target over `duration` ms.
+ * Uses requestAnimationFrame for smooth 60 fps rendering.
+ * @param {HTMLElement} element
+ * @param {number} target
+ * @param {number} duration
+ */
+const animateNumber = (element, target, duration = 1500) => {
+  if (!element) return;
+  const start = parseInt(element.textContent, 10) || 0;
+  const range = target - start;
+  const startTime = performance.now();
+
+  const step = (now) => {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    element.textContent = Math.round(start + range * eased).toLocaleString();
+    if (progress < 1) requestAnimationFrame(step);
+  };
+
+  requestAnimationFrame(step);
+};
+
+/**
+ * Simple markdown parser for chat messages.
+ * Handles: **bold**, *italic*, `code`, unordered lists, ordered lists.
+ * @param {string} text
+ * @returns {string} HTML string
+ */
+const parseMarkdown = (text) => {
+  if (!text) return '';
+
+  let html = text
+    // Escape HTML entities first
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Code blocks (backtick)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Bold
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  // Process lines for lists
+  const lines = html.split('\n');
+  let result = [];
+  let inUl = false;
+  let inOl = false;
+
+  for (const line of lines) {
+    const ulMatch = line.match(/^\s*[-•]\s+(.+)/);
+    const olMatch = line.match(/^\s*(\d+)[.)]\s+(.+)/);
+
+    if (ulMatch) {
+      if (!inUl) { result.push('<ul>'); inUl = true; }
+      if (inOl) { result.push('</ol>'); inOl = false; }
+      result.push(`<li>${ulMatch[1]}</li>`);
+    } else if (olMatch) {
+      if (!inOl) { result.push('<ol>'); inOl = true; }
+      if (inUl) { result.push('</ul>'); inUl = false; }
+      result.push(`<li>${olMatch[2]}</li>`);
+    } else {
+      if (inUl) { result.push('</ul>'); inUl = false; }
+      if (inOl) { result.push('</ol>'); inOl = false; }
+      result.push(line);
+    }
+  }
+  if (inUl) result.push('</ul>');
+  if (inOl) result.push('</ol>');
+
+  // Join and convert double newlines to paragraph breaks
+  return result.join('\n').replace(/\n{2,}/g, '<br><br>').replace(/\n/g, '<br>');
+};
+
+/**
+ * Debounce helper.
+ * @param {Function} fn
+ * @param {number} delay
+ * @returns {Function}
+ */
+const debounce = (fn, delay = 300) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+
+/**
+ * Generate a random alphanumeric ID.
+ * @param {number} len
+ * @returns {string}
+ */
+const generateId = (len = 8) =>
+  Array.from(crypto.getRandomValues(new Uint8Array(len)))
+    .map((b) => b.toString(36).padStart(2, '0'))
+    .join('')
+    .slice(0, len);
+
+/**
+ * Random integer between min (inclusive) and max (inclusive).
+ */
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+/**
+ * Pick a random element from an array.
+ */
+const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+/* ───────────────────────────────────────────────────────────────────────────
+   2. DOM CACHE
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/** @type {Record<string, HTMLElement | null>} */
+const DOM = {};
+
+const cacheDom = () => {
+  DOM.body = document.body;
+  DOM.sidebar = document.querySelector('.sidebar');
+  DOM.menuToggle = document.getElementById('menu-toggle');
+  DOM.pageTitle = document.getElementById('page-title');
+  DOM.langSelector = document.getElementById('lang-selector');
+  DOM.splashScreen = document.getElementById('splash-screen');
+  DOM.toastContainer = document.getElementById('toast-container');
+  DOM.settingsModal = document.getElementById('settings-modal');
+
+  // Chat
+  DOM.chatContainer = document.getElementById('chat-container');
+  DOM.apiKeyPanel = document.getElementById('api-key-panel');
+  DOM.chatMessages = document.getElementById('chat-messages');
+  DOM.chatInput = document.getElementById('chat-input');
+  DOM.sendBtn = document.getElementById('send-btn');
+  DOM.apiKeyInput = document.getElementById('api-key-input');
+  DOM.saveApiKey = document.getElementById('save-api-key');
+
+  // Stadium map
+  DOM.stadiumMap = document.getElementById('stadium-map');
+
+  // Crowd
+  DOM.crowdHeatmap = document.getElementById('crowd-heatmap');
+
+  // Nav items & tab panels
+  DOM.navItems = document.querySelectorAll('.nav-item');
+  DOM.tabPanels = document.querySelectorAll('.tab-panel');
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   3. NOTIFICATION SYSTEM (TOAST)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Display a toast notification.
+ * @param {string} message
+ * @param {'info'|'success'|'warning'|'error'} type
+ * @param {number} duration  ms before auto-dismiss
+ */
+const showToast = (message, type = 'info', duration = 3000) => {
+  const container = DOM.toastContainer;
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.setAttribute('role', 'alert');
+
+  const icons = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span>
+    <span class="toast-message">${message}</span>`;
+
+  container.appendChild(toast);
+
+  // Trigger entrance animation (allow browser to paint first)
+  requestAnimationFrame(() => toast.classList.add('toast-visible'));
+
+  // Auto-remove
+  setTimeout(() => {
+    toast.classList.remove('toast-visible');
+    toast.classList.add('toast-exit');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    // Fallback removal if transitionend doesn't fire
+    setTimeout(() => toast.remove(), 500);
+  }, duration);
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   4. NAVIGATION SYSTEM
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const TAB_TITLES = {
+  home: '🏠 Home',
+  assistant: '🤖 AI Assistant',
+  navigator: '🗺️ Stadium Navigator',
+  crowd: '👥 Crowd Intelligence',
+  transport: '🚌 Transportation',
+  sustainability: '🌱 Sustainability',
+  operations: '⚙️ Operations',
+};
+
+/**
+ * Switch to the specified tab.
+ * @param {string} tabName  e.g. 'home', 'assistant'
+ */
+const switchTab = (tabName) => {
+  // Deactivate all nav items and panels
+  DOM.navItems.forEach((item) => item.classList.remove('active'));
+  DOM.tabPanels.forEach((panel) => {
+    panel.classList.remove('active');
+    panel.style.display = 'none';
+  });
+
+  // Activate matching nav item
+  const activeNav = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+  if (activeNav) activeNav.classList.add('active');
+
+  // Activate matching panel
+  const activePanel = document.getElementById(`tab-${tabName}`);
+  if (activePanel) {
+    activePanel.classList.add('active');
+    activePanel.style.display = '';
+  }
+
+  // Update page title
+  if (DOM.pageTitle) {
+    DOM.pageTitle.textContent = TAB_TITLES[tabName] || tabName;
+  }
+
+  // Update URL hash without scrolling
+  history.replaceState(null, '', `#${tabName}`);
+
+  // Close sidebar on mobile after navigation
+  if (window.innerWidth <= 768 && DOM.sidebar) {
+    DOM.sidebar.classList.remove('open');
+  }
+
+  // Fire tab-specific initialisation hooks
+  onTabActivated(tabName);
+};
+
+/**
+ * Read the current hash and switch to that tab (or default to 'home').
+ */
+const handleHashRoute = () => {
+  const hash = window.location.hash.replace('#', '') || 'home';
+  switchTab(hash);
+};
+
+/**
+ * Hook called every time a tab becomes active. Use for lazy initialisation.
+ * @param {string} tab
+ */
+const onTabActivated = (tab) => {
+  switch (tab) {
+    case 'crowd':
+      initCrowdHeatmap();
+      refreshCrowdData();
+      break;
+    case 'sustainability':
+      animateSustainabilityCounters();
+      break;
+    case 'operations':
+      refreshOperationsKPIs();
+      break;
+    default:
+      break;
+  }
+};
+
+const initNavigation = () => {
+  // Click handlers on nav items (event delegation on sidebar)
+  if (DOM.sidebar) {
+    DOM.sidebar.addEventListener('click', (e) => {
+      const navItem = e.target.closest('.nav-item');
+      if (!navItem) return;
+      const tab = navItem.dataset.tab;
+      if (tab) switchTab(tab);
+    });
+  }
+
+  // Mobile menu toggle
+  if (DOM.menuToggle) {
+    DOM.menuToggle.addEventListener('click', () => {
+      DOM.sidebar?.classList.toggle('open');
+    });
+  }
+
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (
+      window.innerWidth <= 768 &&
+      DOM.sidebar?.classList.contains('open') &&
+      !DOM.sidebar.contains(e.target) &&
+      e.target !== DOM.menuToggle
+    ) {
+      DOM.sidebar.classList.remove('open');
+    }
+  });
+
+  // Hash routing
+  window.addEventListener('hashchange', handleHashRoute);
+  handleHashRoute();
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   5. GEMINI AI INTEGRATION
+   ─────────────────────────────────────────────────────────────────────────── */
+
+let geminiApiKey = '';
+let currentLanguage = 'en';
+
+/**
+ * Build the effective system prompt, appending language instruction if needed.
+ */
+const getSystemPrompt = () => {
+  let prompt = SYSTEM_PROMPT;
+  if (currentLanguage && currentLanguage !== 'en') {
+    prompt += `\n\nIMPORTANT: The user has selected "${currentLanguage}" as their preferred language. Respond in that language unless the user writes in a different language.`;
+  }
+  return prompt;
+};
+
+/**
+ * Validate an API key has a plausible format (non-empty, starts with "AI").
+ * Gemini keys typically start with "AIza".
+ */
+const isValidApiKey = (key) => typeof key === 'string' && key.trim().length >= 10;
+
+/**
+ * Load the saved API key from localStorage and update the UI accordingly.
+ */
+const loadApiKey = () => {
+  const saved = localStorage.getItem(CONFIG.localStorageKeys.apiKey);
+  if (saved && isValidApiKey(saved)) {
+    geminiApiKey = saved;
+    showChatInterface();
+  } else {
+    showApiKeyPanel();
+  }
+};
+
+/**
+ * Save the API key entered by the user.
+ */
+const saveApiKey = () => {
+  const key = DOM.apiKeyInput?.value?.trim();
+  if (!key) {
+    showToast('Please enter an API key.', 'warning');
+    return;
+  }
+  if (!isValidApiKey(key)) {
+    showToast('API key appears invalid. Please check and try again.', 'error');
+    return;
+  }
+  geminiApiKey = key;
+  localStorage.setItem(CONFIG.localStorageKeys.apiKey, key);
+  showToast('API key saved successfully!', 'success');
+  showChatInterface();
+};
+
+const showChatInterface = () => {
+  if (DOM.apiKeyPanel) DOM.apiKeyPanel.style.display = 'none';
+  if (DOM.chatContainer) DOM.chatContainer.style.display = '';
+};
+
+const showApiKeyPanel = () => {
+  if (DOM.apiKeyPanel) DOM.apiKeyPanel.style.display = '';
+  if (DOM.chatContainer) DOM.chatContainer.style.display = 'none';
+};
+
+/**
+ * Send a prompt to the Gemini API and return the text response.
+ * @param {string} prompt  User message or constructed prompt
+ * @param {string} [systemOverride]  Optional system prompt override
+ * @returns {Promise<string>}
+ */
+const callGemini = async (prompt, systemOverride) => {
+  if (!geminiApiKey) {
+    throw new Error('Gemini API key not configured.');
+  }
+
+  const url = `${CONFIG.geminiEndpoint}?key=${geminiApiKey}`;
+
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: { parts: [{ text: systemOverride || getSystemPrompt() }] },
+    generationConfig: {
+      temperature: CONFIG.defaultTemperature,
+      maxOutputTokens: CONFIG.maxOutputTokens,
+    },
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    const msg = err?.error?.message || `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+
+  const data = await response.json();
+  const text =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+  return text;
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   6. CHAT INTERFACE
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Append a message bubble to the chat window.
+ * @param {string} text
+ * @param {'user'|'ai'} sender
+ */
+const appendMessage = (text, sender = 'ai') => {
+  const container = DOM.chatMessages;
+  if (!container) return;
+
+  const msg = document.createElement('div');
+  msg.className = `message message-${sender}`;
+
+  const content = document.createElement('div');
+  content.className = 'message-content';
+
+  const msgText = document.createElement('div');
+  msgText.className = 'message-text';
+  msgText.innerHTML = sender === 'ai' ? parseMarkdown(text) : escapeHtml(text);
+
+  const time = document.createElement('span');
+  time.className = 'message-time';
+  time.textContent = formatTime(new Date());
+
+  content.appendChild(msgText);
+  content.appendChild(time);
+  msg.appendChild(content);
+  container.appendChild(msg);
+
+  scrollChatToBottom();
+};
+
+/**
+ * Escape HTML for user-submitted text.
+ */
+const escapeHtml = (text) =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/**
+ * Show the typing indicator in the chat.
+ * @returns {HTMLElement} The indicator element (for later removal).
+ */
+const showTypingIndicator = () => {
+  const container = DOM.chatMessages;
+  if (!container) return null;
+
+  const indicator = document.createElement('div');
+  indicator.className = 'message message-ai typing-indicator';
+  indicator.id = 'typing-indicator';
+  indicator.innerHTML = `
+    <div class="message-content">
+      <div class="message-text">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+    </div>`;
+  container.appendChild(indicator);
+  scrollChatToBottom();
+  return indicator;
+};
+
+const removeTypingIndicator = () => {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+};
+
+const scrollChatToBottom = () => {
+  const container = DOM.chatMessages;
+  if (container) {
+    requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+  }
+};
+
+/**
+ * Handle sending a chat message.
+ */
+const sendChatMessage = async () => {
+  const input = DOM.chatInput;
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Clear input
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Add user message
+  appendMessage(text, 'user');
+
+  // Show typing
+  showTypingIndicator();
+
+  try {
+    const reply = await callGemini(text);
+    removeTypingIndicator();
+    appendMessage(reply, 'ai');
+  } catch (err) {
+    removeTypingIndicator();
+    appendMessage('Sorry, I encountered an error. Please try again.', 'ai');
+    showToast(`AI Error: ${err.message}`, 'error');
+    console.error('[Gemini]', err);
+  }
+};
+
+const initChat = () => {
+  // Send button
+  DOM.sendBtn?.addEventListener('click', sendChatMessage);
+
+  // Enter to send, Shift+Enter for newline
+  DOM.chatInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  DOM.chatInput?.addEventListener('input', () => {
+    const el = DOM.chatInput;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+  });
+
+  // Save API key button
+  DOM.saveApiKey?.addEventListener('click', saveApiKey);
+
+  // Also save on Enter in API key input
+  DOM.apiKeyInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveApiKey();
+    }
+  });
+
+  // Suggested prompts (event delegation)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.suggested-prompt, [data-prompt]');
+    if (!btn) return;
+    const prompt = btn.dataset.prompt || btn.textContent.trim();
+    if (prompt && DOM.chatInput) {
+      DOM.chatInput.value = prompt;
+      // Switch to assistant tab if not already there
+      switchTab('assistant');
+      sendChatMessage();
+    }
+  });
+
+  loadApiKey();
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   7. STADIUM NAVIGATOR
+   ─────────────────────────────────────────────────────────────────────────── */
+
+let mapZoom = 1;
+const MAP_ZOOM_STEP = 0.2;
+const MAP_ZOOM_MIN = 0.5;
+const MAP_ZOOM_MAX = 3;
+
+const initStadiumNavigator = () => {
+  const map = DOM.stadiumMap;
+  if (!map) return;
+
+  // Hover & click on SVG sections
+  map.addEventListener('mouseover', (e) => {
+    const section = e.target.closest('.map-section');
+    if (section) section.classList.add('hovered');
+  });
+
+  map.addEventListener('mouseout', (e) => {
+    const section = e.target.closest('.map-section');
+    if (section) section.classList.remove('hovered');
+  });
+
+  map.addEventListener('click', (e) => {
+    const section = e.target.closest('.map-section');
+    if (!section) return;
+
+    // Remove previous selection
+    map.querySelectorAll('.map-section.selected').forEach((s) =>
+      s.classList.remove('selected')
+    );
+    section.classList.add('selected');
+
+    const sectionName = section.dataset.name || section.id || 'Section';
+    showToast(`Selected: ${sectionName}`, 'info', 2000);
+  });
+
+  // Zoom controls
+  document.getElementById('zoom-in')?.addEventListener('click', () => {
+    mapZoom = Math.min(mapZoom + MAP_ZOOM_STEP, MAP_ZOOM_MAX);
+    applyMapZoom();
+  });
+
+  document.getElementById('zoom-out')?.addEventListener('click', () => {
+    mapZoom = Math.max(mapZoom - MAP_ZOOM_STEP, MAP_ZOOM_MIN);
+    applyMapZoom();
+  });
+
+  document.getElementById('zoom-reset')?.addEventListener('click', () => {
+    mapZoom = 1;
+    applyMapZoom();
+  });
+
+  // Toggle labels
+  document.getElementById('toggle-labels')?.addEventListener('click', () => {
+    map.classList.toggle('hide-labels');
+  });
+
+  // AI Directions
+  document.getElementById('get-directions')?.addEventListener('click', getAIDirections);
+
+  // Search
+  const navSearch = document.getElementById('nav-search');
+  if (navSearch) {
+    navSearch.addEventListener(
+      'input',
+      debounce((e) => {
+        const query = e.target.value.toLowerCase();
+        map.querySelectorAll('.map-section').forEach((section) => {
+          const name = (section.dataset.name || section.id || '').toLowerCase();
+          section.classList.toggle('highlight', name.includes(query) && query.length > 0);
+        });
+      }, 250)
+    );
+  }
+};
+
+const applyMapZoom = () => {
+  const map = DOM.stadiumMap;
+  if (!map) return;
+  map.style.transform = `scale(${mapZoom})`;
+  map.style.transformOrigin = 'center center';
+};
+
+/**
+ * Get AI-powered walking directions inside the stadium.
+ */
+const getAIDirections = async () => {
+  const fromEl = document.getElementById('direction-from');
+  const toEl = document.getElementById('direction-to');
+  const resultEl = document.getElementById('directions-result');
+  const accessibleCheck = document.getElementById('accessible-route');
+
+  const from = fromEl?.value?.trim();
+  const to = toEl?.value?.trim();
+
+  if (!from || !to) {
+    showToast('Please enter both starting and destination locations.', 'warning');
+    return;
+  }
+
+  if (resultEl) resultEl.innerHTML = '<p class="loading-text">⏳ Generating directions…</p>';
+
+  const accessibilityNote = accessibleCheck?.checked
+    ? ' Include detailed accessibility notes and wheelchair-accessible paths.'
+    : '';
+
+  const prompt = `Give step-by-step walking directions inside a stadium from ${from} to ${to}. Include estimated walking time.${accessibilityNote}`;
+
+  try {
+    const reply = await callGemini(prompt);
+    if (resultEl) resultEl.innerHTML = parseMarkdown(reply);
+  } catch (err) {
+    if (resultEl) resultEl.innerHTML = '<p class="error-text">Failed to get directions. Please try again.</p>';
+    showToast(`Directions error: ${err.message}`, 'error');
+  }
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   8. CROWD INTELLIGENCE (Simulated Real-Time Data)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const CROWD_ZONES = [
+  'North Stand', 'South Stand', 'East Stand', 'West Stand',
+  'VIP Lounge', 'Concourse A', 'Concourse B', 'Gate 1',
+  'Gate 2', 'Gate 3', 'Food Court', 'Fan Zone',
+];
+
+let crowdData = {};
+let crowdInterval = null;
+
+/**
+ * Generate random crowd density data for each zone.
+ */
+const generateCrowdData = () => {
+  const data = {};
+  CROWD_ZONES.forEach((zone) => {
+    data[zone] = {
+      density: randInt(15, 98),
+      trend: pickRandom(['rising', 'falling', 'stable']),
+      count: randInt(200, 5000),
+    };
+  });
+  return data;
+};
+
+/**
+ * Initialise or reset the crowd heatmap grid.
+ */
+const initCrowdHeatmap = () => {
+  const heatmap = DOM.crowdHeatmap;
+  if (!heatmap || heatmap.children.length > 0) return; // already built
+
+  // 8 columns × 6 rows = 48 cells
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 8; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.dataset.level = '0';
+      heatmap.appendChild(cell);
+    }
+  }
+};
+
+/**
+ * Refresh crowd data, update heatmap colours, zone table, and KPIs.
+ */
+const refreshCrowdData = () => {
+  crowdData = generateCrowdData();
+
+  // Update heatmap cells
+  const cells = DOM.crowdHeatmap?.querySelectorAll('.heatmap-cell');
+  if (cells) {
+    cells.forEach((cell) => {
+      const level = randInt(0, 4); // 0=empty, 4=critical
+      cell.dataset.level = level;
+    });
+  }
+
+  // Update zone table
+  const tbody = document.querySelector('#crowd-zone-table tbody, .zone-table tbody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    Object.entries(crowdData).forEach(([zone, info]) => {
+      const row = document.createElement('tr');
+      const trendIcon = info.trend === 'rising' ? '📈' : info.trend === 'falling' ? '📉' : '➡️';
+      const levelClass =
+        info.density > 85 ? 'critical' : info.density > 65 ? 'high' : info.density > 40 ? 'moderate' : 'low';
+      row.innerHTML = `
+        <td>${zone}</td>
+        <td>${info.count.toLocaleString()}</td>
+        <td><span class="density-badge ${levelClass}">${info.density}%</span></td>
+        <td>${trendIcon} ${info.trend}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  // Occupancy ring
+  const totalDensity = Math.round(
+    Object.values(crowdData).reduce((sum, z) => sum + z.density, 0) / CROWD_ZONES.length
+  );
+  const occupancyEl = document.getElementById('occupancy-value');
+  if (occupancyEl) animateNumber(occupancyEl, totalDensity, 1000);
+
+  // Update progress ring if exists
+  const ring = document.querySelector('.progress-ring-circle');
+  if (ring) {
+    const circumference = 2 * Math.PI * (ring.r?.baseVal?.value || 54);
+    ring.style.strokeDasharray = circumference;
+    ring.style.strokeDashoffset = circumference * (1 - totalDensity / 100);
+  }
+
+  // Entry rate
+  const entryRateEl = document.getElementById('entry-rate');
+  if (entryRateEl) animateNumber(entryRateEl, randInt(80, 350), 800);
+
+  // AI crowd insights
+  updateCrowdInsights();
+};
+
+/**
+ * Generate AI-based crowd insights.
+ */
+const updateCrowdInsights = async () => {
+  const insightsContainer = document.getElementById('crowd-insights');
+  if (!insightsContainer) return;
+
+  // Show quick local insights immediately (no API call needed)
+  const highDensityZones = Object.entries(crowdData)
+    .filter(([, z]) => z.density > 75)
+    .map(([name]) => name);
+
+  const insights = [
+    `🔴 ${highDensityZones.length} zone(s) above 75% capacity: ${highDensityZones.join(', ') || 'None'}`,
+    `📊 Average stadium occupancy: ${Math.round(Object.values(crowdData).reduce((s, z) => s + z.density, 0) / CROWD_ZONES.length)}%`,
+    `🚶 Peak entry rate detected at Gate ${randInt(1, 3)} — consider opening auxiliary lanes`,
+  ];
+
+  insightsContainer.innerHTML = insights.map((i) => `<div class="insight-card">${i}</div>`).join('');
+};
+
+const startCrowdUpdates = () => {
+  if (crowdInterval) clearInterval(crowdInterval);
+  crowdInterval = setInterval(refreshCrowdData, CONFIG.crowdUpdateInterval);
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   9. TRANSPORTATION MODULE
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const PARKING_LOTS = [
+  { id: 'A', name: 'Lot A — North', total: 2500, status: 'open' },
+  { id: 'B', name: 'Lot B — East', total: 1800, status: 'open' },
+  { id: 'C', name: 'Lot C — South VIP', total: 600, status: 'open' },
+  { id: 'D', name: 'Lot D — West Economy', total: 3200, status: 'open' },
+  { id: 'E', name: 'Lot E — Overflow', total: 4000, status: 'closed' },
+];
+
+const initTransportation = () => {
+  // Transport mode tabs
+  document.querySelectorAll('.transport-mode-tab, [data-transport-mode]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.transport-mode-tab, [data-transport-mode]').forEach((t) =>
+        t.classList.remove('active')
+      );
+      tab.classList.add('active');
+
+      const mode = tab.dataset.transportMode || tab.dataset.mode;
+      document.querySelectorAll('.transport-panel').forEach((p) => (p.style.display = 'none'));
+      const panel = document.getElementById(`transport-${mode}`);
+      if (panel) panel.style.display = '';
+    });
+  });
+
+  // Route finder
+  document.getElementById('find-route')?.addEventListener('click', findTransportRoute);
+
+  // Initial parking data
+  refreshParkingData();
+};
+
+const findTransportRoute = async () => {
+  const fromEl = document.getElementById('route-from');
+  const venueEl = document.getElementById('route-venue');
+  const modeEl = document.getElementById('route-mode');
+  const timeEl = document.getElementById('route-time');
+  const resultEl = document.getElementById('route-result');
+
+  const from = fromEl?.value?.trim() || 'City Center';
+  const venue = venueEl?.value?.trim() || 'MetLife Stadium';
+  const mode = modeEl?.value || 'public transit';
+  const time = timeEl?.value || 'now';
+
+  if (resultEl) resultEl.innerHTML = '<p class="loading-text">🔍 Finding best routes…</p>';
+
+  const prompt = `Suggest ${mode} routes from ${from} to ${venue}. Include estimated time, distance, cost estimate in USD, and approximate CO2 emissions per passenger. Departing at ${time}. Provide 2-3 options.`;
+
+  try {
+    const reply = await callGemini(prompt);
+    if (resultEl) resultEl.innerHTML = parseMarkdown(reply);
+  } catch (err) {
+    if (resultEl) resultEl.innerHTML = '<p class="error-text">Route lookup failed. Please try again.</p>';
+    showToast(`Route error: ${err.message}`, 'error');
+  }
+};
+
+const refreshParkingData = () => {
+  const container = document.getElementById('parking-list') || document.querySelector('.parking-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  PARKING_LOTS.forEach((lot) => {
+    const available = lot.status === 'open' ? randInt(10, lot.total) : 0;
+    const pct = Math.round((available / lot.total) * 100);
+    const statusClass = pct > 50 ? 'open' : pct > 15 ? 'filling' : pct > 0 ? 'almost-full' : 'full';
+
+    const card = document.createElement('div');
+    card.className = `parking-card status-${statusClass}`;
+    card.innerHTML = `
+      <h4>${lot.name}</h4>
+      <div class="parking-bar">
+        <div class="parking-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <p>${available.toLocaleString()} / ${lot.total.toLocaleString()} spots — <strong>${statusClass.replace('-', ' ')}</strong></p>`;
+    container.appendChild(card);
+  });
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   10. SUSTAINABILITY DASHBOARD
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const SUSTAINABILITY_METRICS = {
+  co2Saved: 14850,       // kg
+  waterSaved: 245000,    // litres
+  wasteRecycled: 78,     // percent
+  renewableEnergy: 62,   // percent
+  treesPlanted: 3200,
+  plasticAvoided: 18400, // kg
+};
+
+const ECO_ACTIONS = [
+  'Fan chose public transit to MetLife Stadium',
+  'Recycling bin #45 emptied at Section 200',
+  '120 reusable cups returned at Concourse B',
+  'Solar panels generated 45 kWh at SoFi Stadium',
+  'Rainwater collection tank reached 85% at AT&T Stadium',
+  'Electric shuttle completed round trip — Gate 3 to Lot D',
+  'Volunteer planted tree #3201 in Fan Zone garden',
+  'Composting station processed 30 kg of food waste',
+  'LED lighting upgrade saved 12 kWh at Section 115',
+  'Carbon offset purchased for 50 flights by fans',
+  'Zero-waste concession stand served 340 meals',
+  'Bike valet parked 89 bicycles at Gate 1',
+];
+
+let sustainabilityFeedInterval = null;
+
+const animateSustainabilityCounters = () => {
+  const mapping = {
+    'co2-saved': SUSTAINABILITY_METRICS.co2Saved,
+    'water-saved': SUSTAINABILITY_METRICS.waterSaved,
+    'waste-recycled': SUSTAINABILITY_METRICS.wasteRecycled,
+    'renewable-energy': SUSTAINABILITY_METRICS.renewableEnergy,
+    'trees-planted': SUSTAINABILITY_METRICS.treesPlanted,
+    'plastic-avoided': SUSTAINABILITY_METRICS.plasticAvoided,
+  };
+
+  Object.entries(mapping).forEach(([id, target]) => {
+    const el = document.getElementById(id);
+    if (el) animateNumber(el, target, 2000);
+  });
+
+  // Carbon tracker ring
+  const carbonRing = document.querySelector('.carbon-ring-circle, #carbon-ring');
+  if (carbonRing) {
+    const r = carbonRing.r?.baseVal?.value || 54;
+    const circumference = 2 * Math.PI * r;
+    carbonRing.style.strokeDasharray = circumference;
+    carbonRing.style.strokeDashoffset = circumference * (1 - SUSTAINABILITY_METRICS.renewableEnergy / 100);
+    carbonRing.style.transition = 'stroke-dashoffset 2s ease';
+  }
+
+  // Start live feed
+  startSustainabilityFeed();
+};
+
+const startSustainabilityFeed = () => {
+  if (sustainabilityFeedInterval) clearInterval(sustainabilityFeedInterval);
+
+  const feed = document.getElementById('sustainability-feed') || document.querySelector('.sustainability-feed');
+  if (!feed) return;
+
+  sustainabilityFeedInterval = setInterval(() => {
+    const entry = document.createElement('div');
+    entry.className = 'feed-entry';
+    entry.innerHTML = `
+      <span class="feed-time">${formatTime(new Date())}</span>
+      <span class="feed-text">🌿 ${pickRandom(ECO_ACTIONS)}</span>`;
+    feed.prepend(entry);
+
+    // Keep feed manageable
+    while (feed.children.length > 20) {
+      feed.lastChild.remove();
+    }
+  }, CONFIG.sustainabilityFeedInterval);
+};
+
+const initSustainabilityTips = () => {
+  document.getElementById('get-eco-tips')?.addEventListener('click', async () => {
+    const resultEl = document.getElementById('eco-tips-result');
+    if (resultEl) resultEl.innerHTML = '<p class="loading-text">🌱 Generating personalized tips…</p>';
+
+    try {
+      const prompt =
+        'Give me 5 personalized sustainability tips for a fan attending a FIFA World Cup 2026 match. Focus on reducing carbon footprint, waste reduction, and eco-friendly choices at the stadium and during travel. Be specific and actionable.';
+      const reply = await callGemini(prompt);
+      if (resultEl) resultEl.innerHTML = parseMarkdown(reply);
+    } catch (err) {
+      if (resultEl) resultEl.innerHTML = '<p class="error-text">Could not load tips.</p>';
+      showToast('Failed to load eco tips.', 'error');
+    }
+  });
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   11. OPERATIONS DASHBOARD
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const SAMPLE_INCIDENTS = [
+  { id: 'INC-001', type: 'Medical', location: 'Section 214', severity: 'high', status: 'active', description: 'Fan experiencing heat exhaustion' },
+  { id: 'INC-002', type: 'Security', location: 'Gate 3', severity: 'medium', status: 'active', description: 'Unauthorized entry attempt detected' },
+  { id: 'INC-003', type: 'Facility', location: 'Restroom Block C', severity: 'low', status: 'resolved', description: 'Plumbing issue — water pressure low' },
+  { id: 'INC-004', type: 'Crowd', location: 'Concourse A', severity: 'high', status: 'active', description: 'Crowd density exceeding safe threshold' },
+  { id: 'INC-005', type: 'Technical', location: 'Scoreboard East', severity: 'medium', status: 'monitoring', description: 'Display flickering intermittently' },
+];
+
+const OPS_KPIS = {
+  staffDeployed: 1247,
+  incidentsActive: 3,
+  avgResponseTime: 2.4,   // minutes
+  gatesOpen: 12,
+  totalGates: 16,
+  fanSatisfaction: 94,    // percent
+};
+
+let kpiInterval = null;
+
+const refreshOperationsKPIs = () => {
+  // Slightly vary KPIs for realism
+  const kpis = {
+    staffDeployed: OPS_KPIS.staffDeployed + randInt(-30, 30),
+    incidentsActive: randInt(1, 6),
+    avgResponseTime: (OPS_KPIS.avgResponseTime + (Math.random() - 0.5)).toFixed(1),
+    gatesOpen: randInt(10, OPS_KPIS.totalGates),
+    fanSatisfaction: Math.min(100, OPS_KPIS.fanSatisfaction + randInt(-3, 3)),
+  };
+
+  // Update KPI cards
+  const kpiMap = {
+    'kpi-staff': kpis.staffDeployed,
+    'kpi-incidents': kpis.incidentsActive,
+    'kpi-response': kpis.avgResponseTime,
+    'kpi-gates': kpis.gatesOpen,
+    'kpi-satisfaction': kpis.fanSatisfaction,
+  };
+
+  Object.entries(kpiMap).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (typeof val === 'string') {
+        el.textContent = val;
+      } else {
+        animateNumber(el, val, 800);
+      }
+    }
+  });
+
+  // Alert banner
+  const banner = document.getElementById('ops-alert-banner') || document.querySelector('.alert-banner');
+  if (banner) {
+    const alerts = [
+      '⚠️ Gate 5 temporarily closed for maintenance — redirecting to Gate 6',
+      '🌡️ Heat advisory active — extra hydration stations deployed at Concourse B',
+      '🔒 Security sweep completed in Lot C — all clear',
+      '📢 VIP section access restricted until 30 min before kickoff',
+      '🚑 Medical team bravo deployed to Section 300',
+    ];
+    banner.textContent = pickRandom(alerts);
+  }
+
+  // Incidents table
+  renderIncidents();
+};
+
+const renderIncidents = () => {
+  const tbody = document.querySelector('#incidents-table tbody, .incidents-table tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  SAMPLE_INCIDENTS.forEach((inc) => {
+    const row = document.createElement('tr');
+    row.className = `severity-${inc.severity}`;
+    row.innerHTML = `
+      <td>${inc.id}</td>
+      <td>${inc.type}</td>
+      <td>${inc.location}</td>
+      <td><span class="severity-badge ${inc.severity}">${inc.severity}</span></td>
+      <td><span class="status-badge ${inc.status}">${inc.status}</span></td>
+      <td>${inc.description}</td>
+      <td><button class="btn-sm btn-ai-recommend" data-incident-id="${inc.id}">AI Recommend</button></td>`;
+    tbody.appendChild(row);
+  });
+};
+
+const initOperations = () => {
+  // AI recommendation for incidents
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-ai-recommend');
+    if (!btn) return;
+
+    const incId = btn.dataset.incidentId;
+    const incident = SAMPLE_INCIDENTS.find((i) => i.id === incId);
+    if (!incident) return;
+
+    btn.textContent = '⏳…';
+    btn.disabled = true;
+
+    try {
+      const prompt = `As a stadium operations AI, provide a brief recommended action plan for this incident:
+Type: ${incident.type}
+Location: ${incident.location}
+Severity: ${incident.severity}
+Description: ${incident.description}
+
+Give 3-4 specific action steps and any safety considerations.`;
+
+      const reply = await callGemini(prompt);
+      showToast(`AI Recommendation for ${incId} generated`, 'success');
+
+      // Show recommendation in a modal-like overlay or below table
+      const resultArea = document.getElementById('incident-recommendation');
+      if (resultArea) {
+        resultArea.innerHTML = `<h4>AI Recommendation — ${incId}</h4>${parseMarkdown(reply)}`;
+        resultArea.style.display = '';
+      } else {
+        // Fallback: alert
+        appendMessage(`**AI Recommendation for ${incId}:**\n${reply}`, 'ai');
+        switchTab('assistant');
+      }
+    } catch (err) {
+      showToast(`Failed to get recommendation: ${err.message}`, 'error');
+    } finally {
+      btn.textContent = 'AI Recommend';
+      btn.disabled = false;
+    }
+  });
+
+  // Report incident button
+  document.getElementById('report-incident')?.addEventListener('click', () => {
+    const type = prompt('Incident type (Medical / Security / Facility / Crowd / Technical):');
+    if (!type) return;
+    const location = prompt('Location (e.g., Section 100, Gate 2):');
+    if (!location) return;
+    const description = prompt('Brief description:');
+    if (!description) return;
+
+    const newInc = {
+      id: `INC-${String(SAMPLE_INCIDENTS.length + 1).padStart(3, '0')}`,
+      type,
+      location,
+      severity: 'medium',
+      status: 'active',
+      description,
+    };
+
+    SAMPLE_INCIDENTS.push(newInc);
+    renderIncidents();
+    showToast(`Incident ${newInc.id} reported successfully.`, 'success');
+  });
+
+  // Start KPI refresh interval
+  if (kpiInterval) clearInterval(kpiInterval);
+  kpiInterval = setInterval(refreshOperationsKPIs, CONFIG.kpiUpdateInterval);
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   12. SETTINGS & PREFERENCES
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const initSettings = () => {
+  // Open settings
+  document.getElementById('open-settings')?.addEventListener('click', () => {
+    if (DOM.settingsModal) DOM.settingsModal.classList.add('open');
+  });
+
+  // Also open from nav or gear icon
+  document.querySelectorAll('[data-action="open-settings"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      if (DOM.settingsModal) DOM.settingsModal.classList.add('open');
+    });
+  });
+
+  // Close settings
+  document.getElementById('close-settings')?.addEventListener('click', closeSettings);
+  DOM.settingsModal?.addEventListener('click', (e) => {
+    if (e.target === DOM.settingsModal) closeSettings();
+  });
+
+  // Theme toggle
+  document.getElementById('theme-toggle')?.addEventListener('change', (e) => {
+    const isLight = e.target.checked;
+    DOM.body.classList.toggle('light-theme', isLight);
+    localStorage.setItem(CONFIG.localStorageKeys.theme, isLight ? 'light' : 'dark');
+    showToast(`Theme switched to ${isLight ? 'light' : 'dark'} mode`, 'info', 2000);
+  });
+
+  // High contrast
+  document.getElementById('high-contrast-toggle')?.addEventListener('change', (e) => {
+    DOM.body.classList.toggle('high-contrast', e.target.checked);
+    localStorage.setItem(CONFIG.localStorageKeys.highContrast, e.target.checked);
+  });
+
+  // Large text
+  document.getElementById('large-text-toggle')?.addEventListener('change', (e) => {
+    DOM.body.classList.toggle('large-text', e.target.checked);
+    localStorage.setItem(CONFIG.localStorageKeys.largeText, e.target.checked);
+  });
+
+  // Load saved settings
+  loadSettings();
+};
+
+const closeSettings = () => {
+  if (DOM.settingsModal) DOM.settingsModal.classList.remove('open');
+};
+
+const loadSettings = () => {
+  // Theme
+  const savedTheme = localStorage.getItem(CONFIG.localStorageKeys.theme);
+  if (savedTheme === 'light') {
+    DOM.body?.classList.add('light-theme');
+    const toggle = document.getElementById('theme-toggle');
+    if (toggle) toggle.checked = true;
+  }
+
+  // High contrast
+  if (localStorage.getItem(CONFIG.localStorageKeys.highContrast) === 'true') {
+    DOM.body?.classList.add('high-contrast');
+    const hc = document.getElementById('high-contrast-toggle');
+    if (hc) hc.checked = true;
+  }
+
+  // Large text
+  if (localStorage.getItem(CONFIG.localStorageKeys.largeText) === 'true') {
+    DOM.body?.classList.add('large-text');
+    const lt = document.getElementById('large-text-toggle');
+    if (lt) lt.checked = true;
+  }
+
+  // Language
+  const savedLang = localStorage.getItem(CONFIG.localStorageKeys.language);
+  if (savedLang) {
+    currentLanguage = savedLang;
+    if (DOM.langSelector) DOM.langSelector.value = savedLang;
+  }
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   13. LANGUAGE / TRANSLATION
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const initLanguageSelector = () => {
+  DOM.langSelector?.addEventListener('change', (e) => {
+    currentLanguage = e.target.value;
+    localStorage.setItem(CONFIG.localStorageKeys.language, currentLanguage);
+
+    const langNames = {
+      en: 'English', es: 'Español', fr: 'Français', pt: 'Português',
+      ar: 'العربية', zh: '中文', de: 'Deutsch', ja: '日本語',
+    };
+
+    showToast(
+      `Language set to ${langNames[currentLanguage] || currentLanguage}. AI responses will follow this preference.`,
+      'success',
+      3000
+    );
+  });
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   14. SIMULATED DATA ENGINE
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Generate a realistic match schedule around the current tournament window.
+ */
+const generateMatchSchedule = () => {
+  const teams = [
+    'Brazil', 'Argentina', 'France', 'Germany', 'Spain', 'England',
+    'Portugal', 'Netherlands', 'Belgium', 'Italy', 'Uruguay', 'Mexico',
+    'USA', 'Canada', 'Japan', 'South Korea', 'Australia', 'Saudi Arabia',
+    'Morocco', 'Senegal', 'Nigeria', 'Ghana', 'Ecuador', 'Colombia',
+    'Croatia', 'Denmark', 'Switzerland', 'Poland', 'Serbia', 'Cameroon',
+    'Tunisia', 'Costa Rica',
+  ];
+
+  const matches = [];
+  for (let i = 0; i < 8; i++) {
+    const homeIdx = randInt(0, teams.length - 1);
+    let awayIdx = randInt(0, teams.length - 1);
+    while (awayIdx === homeIdx) awayIdx = randInt(0, teams.length - 1);
+
+    const venue = pickRandom(VENUES);
+    const hour = randInt(13, 21);
+    const day = randInt(11, 18);
+
+    matches.push({
+      id: generateId(),
+      home: teams[homeIdx],
+      away: teams[awayIdx],
+      venue: venue.name,
+      city: venue.city,
+      date: `July ${day}, 2026`,
+      time: `${hour}:00`,
+      stage: pickRandom(['Group Stage', 'Round of 32', 'Round of 16', 'Quarter-Final']),
+      score: day < 12 ? `${randInt(0, 4)} - ${randInt(0, 3)}` : null, // past matches have scores
+    });
+  }
+
+  return matches;
+};
+
+/**
+ * Generate simulated sustainability metrics that grow over time.
+ */
+const updateSimulatedSustainability = () => {
+  SUSTAINABILITY_METRICS.co2Saved += randInt(5, 50);
+  SUSTAINABILITY_METRICS.waterSaved += randInt(100, 800);
+  SUSTAINABILITY_METRICS.treesPlanted += Math.random() > 0.8 ? 1 : 0;
+  SUSTAINABILITY_METRICS.plasticAvoided += randInt(2, 20);
+};
+
+/**
+ * Render the match schedule into the home tab or schedule section.
+ */
+const renderMatchSchedule = () => {
+  const container = document.getElementById('match-schedule') || document.querySelector('.match-schedule');
+  if (!container) return;
+
+  const matches = generateMatchSchedule();
+  container.innerHTML = '';
+
+  matches.forEach((m) => {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    card.innerHTML = `
+      <div class="match-stage">${m.stage}</div>
+      <div class="match-teams">
+        <span class="team">${m.home}</span>
+        <span class="match-vs">${m.score || 'vs'}</span>
+        <span class="team">${m.away}</span>
+      </div>
+      <div class="match-info">
+        <span>📍 ${m.venue}, ${m.city}</span>
+        <span>📅 ${m.date} at ${m.time}</span>
+      </div>`;
+    container.appendChild(card);
+  });
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   15. SPLASH SCREEN
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const initSplashScreen = () => {
+  const splash = DOM.splashScreen;
+  if (!splash) return;
+
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    splash.addEventListener('transitionend', () => {
+      splash.style.display = 'none';
+    }, { once: true });
+    // Fallback
+    setTimeout(() => { splash.style.display = 'none'; }, 800);
+  }, CONFIG.splashDuration);
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   16. SERVICE WORKER REGISTRATION
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const registerServiceWorker = () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+      .register('sw.js')
+      .then((reg) => console.log('[SW] Registered:', reg.scope))
+      .catch((err) => console.warn('[SW] Registration failed:', err));
+  }
+};
+
+/* ───────────────────────────────────────────────────────────────────────────
+   17. APP INITIALISATION
+   ─────────────────────────────────────────────────────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Cache DOM references
+  cacheDom();
+
+  // Splash screen
+  initSplashScreen();
+
+  // Core modules
+  initNavigation();
+  initChat();
+  initStadiumNavigator();
+  initTransportation();
+  initSustainabilityTips();
+  initOperations();
+  initSettings();
+  initLanguageSelector();
+
+  // Render initial data
+  renderMatchSchedule();
+
+  // Start simulated data loops
+  startCrowdUpdates();
+
+  // Periodically update sustainability numbers
+  setInterval(() => {
+    updateSimulatedSustainability();
+  }, 15_000);
+
+  // Service worker
+  registerServiceWorker();
+
+  console.log(
+    '%c⚽ FIFA World Cup 2026 — Stadium Operations Platform loaded',
+    'color: #00d4aa; font-size: 14px; font-weight: bold;'
+  );
+});
