@@ -66,7 +66,7 @@ This project demonstrates the transformative potential of Generative AI in enhan
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   StadiumAI Frontend                 │
+│                   StadiumAI Frontend                │
 │   ┌───────────┬──────────┬──────────┬────────────┐  │
 │   │   Home    │    AI    │Navigator │   Crowd    │  │
 │   │ Dashboard │Assistant │  & Maps  │   Intel    │  │
@@ -74,16 +74,16 @@ This project demonstrates the transformative potential of Generative AI in enhan
 │   │ Transport │  Sustain │  Ops     │  Settings  │  │
 │   │   Hub     │  ability │ Center   │  & A11y    │  │
 │   └───────────┴──────────┴──────────┴────────────┘  │
-│                        │                             │
-│              ┌─────────▼──────────┐                  │
-│              │  Gemini AI Engine  │                  │
-│              │  (gemini-2.0-flash)│                  │
-│              └─────────┬──────────┘                  │
-│                        │                             │
-│              ┌─────────▼──────────┐                  │
-│              │  Google AI Studio  │                  │
-│              │    REST API        │                  │
-│              └────────────────────┘                  │
+│                        │                            │
+│              ┌─────────▼──────────┐                 │
+│              │  Gemini AI Engine  │                 │
+│              │  (gemini-2.0-flash)│                 │
+│              └─────────┬──────────┘                 │
+│                        │                            │
+│              ┌─────────▼──────────┐                 │
+│              │  Google AI Studio  │                 │
+│              │    REST API        │                 │
+│              └────────────────────┘                 │
 └─────────────────────────────────────────────────────┘
 ```
 
